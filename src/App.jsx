@@ -36,7 +36,6 @@ function App() {
           setAccount={setAccount}
           setContractAddress={(addr) => {
             setContractAddress(addr);
-            setActiveTab("info"); // switch automatically after deploy
           }}
           contractAddress={contractAddress} 
         />

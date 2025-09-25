@@ -10,6 +10,7 @@ export default function DeployContract({ account, setAccount, setContractAddress
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [duration, setDuration] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   // Fetch ETH price
   useEffect(() => {
@@ -45,6 +46,8 @@ export default function DeployContract({ account, setAccount, setContractAddress
       if (!window.ethereum) return alert("Please install Metamask");
       if (!tenant || !usdRent || !duration) return alert("Fill all fields");
 
+      setLoading(true);
+
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const signer = provider.getSigner();
 
@@ -63,6 +66,8 @@ export default function DeployContract({ account, setAccount, setContractAddress
     } catch (err) {
       console.error(err);
       alert("Deployment failed, see console for details");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -114,7 +119,10 @@ export default function DeployContract({ account, setAccount, setContractAddress
         </p>
       )}
 
-      <button className="btn" onClick={deployContract}>Deploy Contract</button>
+      <button className="btn" onClick={deployContract} disabled={loading}>
+        {loading ? <span className="loader" /> : "Deploy Contract"}
+      </button>
+
 
       {contractAddress && (
         <p className="deployed">

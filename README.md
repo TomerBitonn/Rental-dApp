@@ -79,7 +79,7 @@ The dApp provides a **user-friendly interface** for:
 1. Clone this repo:
    ```bash
    git clone https://github.com/TomerBitonn/Rental-dApp.git
-   cd Rental-DApp
+   cd Rental-dApp
    ```
 
 2. Install dependencies:
