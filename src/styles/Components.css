@@ -1,0 +1,107 @@
+.card {
+  border: 1px solid #e0e0e0;
+  padding: 30px;
+  border-radius: 15px;
+  background: #fff;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  max-width: 420px;
+  width: 100%;
+  text-align: center;
+}
+
+.card h2 {
+  margin-bottom: 20px;
+  color: #222;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.btn {
+  padding: 12px 20px;
+  margin-top: 15px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 500;
+  transition: background 0.3s;
+  width: 100%;
+}
+.btn:hover {
+  background: #0056b3;
+}
+
+input {
+  display: block;
+  margin: 12px 0;
+  padding: 12px;
+  width: 100%;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+label {
+  display: block;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 500;
+  margin-top: 10px;
+  margin-bottom: 5px;
+  color: #555;
+}
+
+.connected {
+  color: green;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+.address {
+  font-family: monospace;
+  color: #333;
+}
+
+.loader {
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #007bff;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  animation: spin 1s linear infinite;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.info {
+  text-align: left;
+  margin-top: 20px;
+}
+
+.payments {
+  margin-top: 20px;
+}
+
+.payments table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.payments th, .payments td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: center;
+}
+
+.payments th {
+  background-color: #f2f2f2;
+}

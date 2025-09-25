@@ -1,0 +1,44 @@
+.app {
+  display: flex;
+  flex-direction: column; 
+  justify-content: flex-start;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.app h1 {
+  font-size: 28px;
+  margin-bottom: 30px;
+  color: #222;
+  text-align: center;
+}
+
+.tab-nav {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+  gap: 15px;
+}
+
+.tab-btn {
+  padding: 10px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px 6px 0 0;
+  cursor: pointer;
+  background: #f0f0f0;
+  color: #333;
+  transition: all 0.3s ease;
+}
+
+.tab-btn:hover {
+  background: #e0e0e0;
+}
+
+.tab-btn.active {
+  background: #007bff;
+  color: white;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.15) inset;
+}
