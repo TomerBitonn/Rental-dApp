@@ -46,7 +46,7 @@ export default function ContractInfo() {
   const formatRent = (weiAmount) => {
     try {
         if (!weiAmount) return "0";
-        const eth = parseFloat(ethers.utils.formatEther(weiAmount.toString())); // המרה מ־wei ל־ETH
+        const eth = parseFloat(ethers.utils.formatEther(weiAmount.toString())); 
         if (!ethPrice) return `${eth.toFixed(6)} ETH`;
         const usd = (eth * ethPrice).toFixed(2);
         return `${eth.toFixed(6)} ETH ($${usd} USD)`; 
