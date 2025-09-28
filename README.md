@@ -1,4 +1,4 @@
-# Rental Smart Contracts DApp 🏠
+# Rental Smart Contracts DApp 
 
 Frontend decentralized application (dApp) for interacting with the [Rental-Smart-Contracts](https://github.com/TomerBitonn/Rental-Smart-Contracts.git) repository.  
 This dApp allows landlords and tenants to easily **deploy, view, and interact with rental agreements on-chain**.
@@ -57,19 +57,38 @@ The dApp provides a **user-friendly interface** for:
 ## 📂 Project Structure
 
 ```
-/src
-├── abi/ # Smart contract ABI
-│   └── RentalContract.json
-├── components/ # React components
-│   ├── DeployContract.jsx # UI for deploying a new contract
-│   ├── ContractInfo.jsx # UI for viewing contract details
-│   └── # (Future) contract actions (sign, pay, cancel...)
-├── styles/ # CSS files
-│   ├── App.css
-│   ├── Components.css
-│   └── index.css
-├── App.jsx # Main app with tab navigation
-└── main.jsx # Entry point
+Rental-dApp
+│
+├── assets/
+│   ├── Contract_Info.png
+│   └── Deploy_Rental_Contract.png
+│
+├── node_modules/
+│
+├── src/
+│   ├── abi/ 
+│   │   └── RentalContract.json
+│   │
+│   ├── components/
+│   │   ├── DeployContract.jsx 
+│   │   ├── ContractInfo.jsx 
+│   │   └── # (Future) contract actions (sign, pay, cancel...)
+│   │
+│   ├── styles/
+│   │   ├── App.css
+│   │   ├── Components.css
+│   │   └── index.css
+│   │
+│   ├── App.jsx        # Main app with tab navigation
+│   └── main.jsx       # Entry point
+│
+├── .gitignore
+├── eslint.config.js
+├── index.html
+├── package-lock.json
+├── package.json
+├── README.md
+└── vite.config.js
 ```
 
 ---
