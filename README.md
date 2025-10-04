@@ -121,10 +121,10 @@ Rental-dApp
 ## 🖼️ Screenshots
 
 ### Deploy form
-![Deploy form](assets/Deploy_Rental_Contract.png)
+![Deploy form](frontend/assets/Deploy_Rental_Contract.png)
 
 ### Contract Info page
-![Contract Info page](assets/Contract_Info.png)
+![Contract Info page](frontend/assets/Contract_Info.png)
 
 ---
 
