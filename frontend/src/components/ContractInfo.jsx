@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import { ethers } from "ethers";
 import artifact from "../abi/RentalContract.json";
 import "../styles/Components.css";
+import SignContract from "./SignContract";
 
-export default function ContractInfo() {
-  const [contractAddress, setContractAddress] = useState("");
+export default function ContractInfo({ provider, signer, account, contractAddress, setContractAddress }) {
   const [contractData, setContractData] = useState(null);
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -20,11 +20,11 @@ export default function ContractInfo() {
 
   const loadContract = async () => {
     try {
-      if (!window.ethereum) return alert("Please install MetaMask");
+      if (!provider) return alert("No provider found. Please connect MetaMask.");
 
       setLoading(true);
 
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      // Use provider (read-only)
       const contract = new ethers.Contract(contractAddress, artifact.abi, provider);
 
       // Get contract info
@@ -45,14 +45,14 @@ export default function ContractInfo() {
   // Convert wei → ETH → USD
   const formatRent = (weiAmount) => {
     try {
-        if (!weiAmount) return "0";
-        const eth = parseFloat(ethers.utils.formatEther(weiAmount.toString())); 
-        if (!ethPrice) return `${eth.toFixed(6)} ETH`;
-        const usd = (eth * ethPrice).toFixed(2);
-        return `${eth.toFixed(6)} ETH ($${usd} USD)`; 
+      if (!weiAmount) return "0";
+      const eth = parseFloat(ethers.utils.formatEther(weiAmount.toString())); 
+      if (!ethPrice) return `${eth.toFixed(6)} ETH`;
+      const usd = (eth * ethPrice).toFixed(2);
+      return `${eth.toFixed(6)} ETH ($${usd} USD)`; 
     } catch (e) {
-        console.error("Error formatting rent:", e);
-        return weiAmount.toString();
+      console.error("Error formatting rent:", e);
+      return weiAmount.toString();
     }
   };
 
@@ -76,29 +76,37 @@ export default function ContractInfo() {
       <input
         type="text"
         placeholder="0x..."
-        value={contractAddress}
+        value={contractAddress || ""}
         onChange={(e) => setContractAddress(e.target.value)}
       />
 
-      <button className="btn" onClick={loadContract} disabled={loading}>
+      <button className="btn" onClick={loadContract} disabled={loading || !contractAddress}>
         {loading ? "Loading..." : "Load Contract"}
       </button>
 
       {/* Contract Info */}
       {contractData && (
-        <div className="info">
-          <h3>Details</h3>
-          <p><b>Landlord:</b> {contractData[0]}</p>
-          <p><b>Tenant:</b> {contractData[1]}</p>
-          <p><b>Rent Amount:</b> {formatRent(contractData[2])}</p>
-          <p><b>Start Date:</b> {new Date(contractData[3] * 1000).toLocaleDateString()}</p>
-          <p><b>End Date:</b> {new Date(contractData[4] * 1000).toLocaleDateString()}</p>
-          <p><b>Signed by Landlord:</b> {contractData[5] ? "Yes" : "No"}</p>
-          <p><b>Signed by Tenant:</b> {contractData[6] ? "Yes" : "No"}</p>
-          <p><b>Locked:</b> {contractData[7] ? "Yes" : "No"}</p>
-          <p><b>Active:</b> {contractData[8] ? "Yes" : "No"}</p>
-          <p><b>Status:</b> {getStatusLabel(contractData[9])}</p>
-        </div>
+        <>
+          <div className="info">
+            <h3>Details</h3>
+            <p><b>Landlord:</b> {contractData[0]}</p>
+            <p><b>Tenant:</b> {contractData[1]}</p>
+            <p><b>Rent Amount:</b> {formatRent(contractData[2])}</p>
+            <p><b>Start Date:</b> {new Date(contractData[3] * 1000).toLocaleDateString()}</p>
+            <p><b>End Date:</b> {new Date(contractData[4] * 1000).toLocaleDateString()}</p>
+            <p><b>Signed by Landlord:</b> {contractData[5] ? "Yes" : "No"}</p>
+            <p><b>Signed by Tenant:</b> {contractData[6] ? "Yes" : "No"}</p>
+            <p><b>Locked:</b> {contractData[7] ? "Yes" : "No"}</p>
+            <p><b>Active:</b> {contractData[8] ? "Yes" : "No"}</p>
+            <p><b>Status:</b> {getStatusLabel(contractData[9])}</p>
+          </div>
+
+          {/* Actions Section */}
+          <div className="actions">
+            <h2>Actions</h2>
+            <SignContract contractAddress={contractAddress} signer={signer} account={account} />
+          </div>
+        </>
       )}
 
       {/* Payments */}

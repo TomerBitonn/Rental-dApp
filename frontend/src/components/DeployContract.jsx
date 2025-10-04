@@ -3,7 +3,7 @@ import { ethers } from "ethers";
 import artifact from "../abi/RentalContract.json";
 import "../styles/Components.css";
 
-export default function DeployContract({ account, setAccount, setContractAddress, contractAddress }) {
+export default function DeployContract({ signer, account, setContractAddress, contractAddress }) {
   const [tenant, setTenant] = useState("");
   const [usdRent, setUsdRent] = useState("");
   const [ethPrice, setEthPrice] = useState(null);
@@ -30,26 +30,19 @@ export default function DeployContract({ account, setAccount, setContractAddress
     }
   }, [startDate, endDate]);
 
-  // Connect wallet
-  const connectWallet = async () => {
-    if (!window.ethereum) return alert("Please install Metamask");
-
-    const provider = new ethers.providers.Web3Provider(window.ethereum);
-    await provider.send("eth_requestAccounts", []);
-    const signer = provider.getSigner();
-    setAccount(await signer.getAddress());
-  };
-
   // Deploy contract
   const deployContract = async () => {
     try {
-      if (!window.ethereum) return alert("Please install Metamask");
-      if (!tenant || !usdRent || !duration) return alert("Fill all fields");
+      if (!signer || !account) {
+        alert("Please connect MetaMask before deploying.");
+        return;
+      }
+      if (!tenant || !usdRent || !duration) {
+        alert("Fill all fields");
+        return;
+      }
 
       setLoading(true);
-
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const signer = provider.getSigner();
 
       const factory = new ethers.ContractFactory(artifact.abi, artifact.bytecode, signer);
 
@@ -62,7 +55,7 @@ export default function DeployContract({ account, setAccount, setContractAddress
       );
 
       await contract.deployed();
-      setContractAddress(contract.address); // updates global state
+      setContractAddress(contract.address);
     } catch (err) {
       console.error(err);
       alert("Deployment failed, see console for details");
@@ -74,12 +67,6 @@ export default function DeployContract({ account, setAccount, setContractAddress
   return (
     <div className="card">
       <h2>Deploy Rental Contract</h2>
-
-      {!account ? (
-        <button className="btn" onClick={connectWallet}>Connect MetaMask</button>
-      ) : (
-        <p className="connected">Connected: <span className="address">{account}</span></p>
-      )}
 
       <label>Tenant Address</label>
       <input

@@ -29,6 +29,7 @@
   transition: background 0.3s;
   width: 100%;
 }
+
 .btn:hover {
   background: #0056b3;
 }
@@ -52,12 +53,6 @@ label {
   margin-top: 10px;
   margin-bottom: 5px;
   color: #555;
-}
-
-.connected {
-  color: green;
-  font-weight: bold;
-  margin-bottom: 15px;
 }
 
 .address {
@@ -104,4 +99,65 @@ label {
 
 .payments th {
   background-color: #f2f2f2;
+}
+
+.action-card {
+  border: 1px solid #ddd;
+  padding: 20px;
+  margin-top: 20px;
+  border-radius: 10px;
+  text-align: center;
+  background: #fafafa;
+}
+
+.signature-pad {
+  margin: 20px 0;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #f9f9f9;
+  padding: 10px;
+}
+
+.sigCanvas {
+  width: 100%;
+  height: 150px;
+  border: 1px solid #ccc;
+  background: #fff;
+  border-radius: 6px;
+}
+
+.sig-buttons {
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.connection-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px; 
+  margin-bottom: 20px;
+}
+
+.connection-status .connected {
+  color: green;
+  font-weight: bold;
+  margin: 0;
+}
+
+.connection-status .address {
+  font-family: monospace;
+  color: #333;
+}
+
+.btn.secondary.small {
+  padding: 6px 12px;
+  font-size: 13px;
+  width: auto;
+  background: #6c757d;
+}
+
+.btn.secondary.small:hover {
+  background: #565e64;
 }
