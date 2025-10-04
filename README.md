@@ -93,11 +93,12 @@ graph TD
 ## 🔐 Authentication Flow Diagram
 ```mermaid
 flowchart LR
-  A[User clicks Login] --> B[/auth/nonce -> Backend]
+  A[User clicks Login]
+  A --> B[/auth/nonce → Backend/]
   B --> C[User signs message]
-  C --> D[/auth/verify -> Backend]
+  C --> D[/auth/verify → Backend/]
   D --> E[JWT cookie created]
-  E --> F[/me -> Authenticated DApp]
+  E --> F[/me → Authenticated DApp/]
 ```
 
 ---
