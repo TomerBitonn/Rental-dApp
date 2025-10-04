@@ -93,12 +93,11 @@ graph TD
 ## 🔐 Authentication Flow Diagram
 ```mermaid
 flowchart LR
-  User[User clicks "Login with MetaMask"]
-  User --> Frontend[Frontend → POST /auth/nonce → Backend (creates nonce)]
-  Frontend --> MetaMask[User signs message in MetaMask]
-  MetaMask --> Verify[Frontend → POST /auth/verify → Backend (verifies SIWE)]
-  Verify --> JWT[Backend sets JWT cookie (valid session)]
-  JWT --> Done[Frontend loads /me → Authenticated DApp view]
+  A[User clicks Login] --> B[/auth/nonce → Backend]
+  B --> C[User signs message]
+  C --> D[/auth/verify → Backend]
+  D --> E[JWT cookie created]
+  E --> F[/me → Authenticated DApp]
 ```
 
 ---
