@@ -1,126 +1,110 @@
 import { useEffect, useState } from "react";
 import { ethers } from "ethers";
+import { getMe, logout } from "./api";
+import Login from "./components/Login";
 import DeployContract from "./components/DeployContract";
 import ContractInfo from "./components/ContractInfo";
 import "./styles/App.css";
 import "./styles/Components.css";
 
 function App() {
-  const [account, setAccount] = useState(null);
+  const [user, setUser] = useState(null); // backend user
   const [provider, setProvider] = useState(null);
   const [signer, setSigner] = useState(null);
+  const [account, setAccount] = useState(null);
   const [contractAddress, setContractAddress] = useState(null);
   const [activeTab, setActiveTab] = useState("deploy");
-  const [isMetaMaskInstalled, setIsMetaMaskInstalled] = useState(true);
+  const [loading, setLoading] = useState(true);
 
-  // Check MetaMask on load 
+  // On app load: check if already logged in (JWT cookie)
   useEffect(() => {
-    if (typeof window.ethereum === "undefined") {
-      setIsMetaMaskInstalled(false);
-      return;
-    }
-    const prov = new ethers.providers.Web3Provider(window.ethereum);
-    setProvider(prov);
-
-    prov.listAccounts().then((accounts) => {
-      if (accounts.length > 0) {
-        setAccount(accounts[0]);
-        setSigner(prov.getSigner());
+    const checkSession = async () => {
+      try {
+        const res = await getMe();
+        if (res.user) setUser(res.user);
+      } catch {
+        // not logged in
+      } finally {
+        setLoading(false);
       }
-    });
-
-    // Listen to account change
-    window.ethereum.on("accountsChanged", (accounts) => {
-      if (accounts.length === 0) {
-        setAccount(null);
-      } else {
-        setAccount(accounts[0]);
-        setSigner(prov.getSigner());
-      }
-    });
+    };
+    checkSession();
   }, []);
 
-  // Connect MetaMask manually 
-  const connectWallet = async () => {
-    if (!window.ethereum) {
-      alert("Please install MetaMask to use this app");
-      return;
-    }
-
-    try {
+  // Initialize provider and signer once MetaMask is connected
+  useEffect(() => {
+    if (window.ethereum) {
       const prov = new ethers.providers.Web3Provider(window.ethereum);
-      const accounts = await prov.send("eth_requestAccounts", []);
       setProvider(prov);
-      setSigner(prov.getSigner());
-      setAccount(accounts[0]);
-    } catch (err) {
-      console.error("Failed to connect wallet:", err);
-      alert("Connection to MetaMask failed. See console for details.");
-    }
-  };
+      prov.listAccounts().then((accounts) => {
+        if (accounts.length > 0) {
+          setAccount(accounts[0]);
+          setSigner(prov.getSigner());
+        }
+      });
 
-  const disconnectWallet = () => {
-    setAccount(null);
+      // Listen to account change
+      window.ethereum.on("accountsChanged", (accounts) => {
+        if (accounts.length === 0) {
+          setAccount(null);
+          setSigner(null);
+        } else {
+          setAccount(accounts[0]);
+          setSigner(prov.getSigner());
+        }
+      });
+    }
+  }, []);
+
+  const handleLogout = async () => {
+    await logout();
+    setUser(null);
     setSigner(null);
     setProvider(null);
-    setContractAddress(null);
-    localStorage.removeItem("connected"); 
+    setAccount(null);
   };
 
-  // UI: MetaMask not installed 
-  if (!isMetaMaskInstalled) {
+  if (loading) {
     return (
       <div className="app">
-        <h1>Rental Smart Contracts DApp</h1>
-        <div className="card">
-          <p>MetaMask is not installed.</p>
-          <a
-            href="https://metamask.io/download/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn"
-          >
-            Install MetaMask
-          </a>
-        </div>
+        <h1>Loading...</h1>
       </div>
     );
   }
 
-  // UI: Wallet not connected 
-  if (!account) {
+  // If not logged in → show login screen
+  if (!user) {
     return (
       <div className="app">
         <h1>Rental Smart Contracts DApp</h1>
-        <div className="card">
-          <p>Please connect your MetaMask wallet to continue</p>
-          <button className="btn" onClick={connectWallet}>
-            Connect Wallet
-          </button>
-        </div>
+        <Login
+          onLoginSuccess={(me) => {
+            setUser(me);
+            // Initialize provider/signer immediately after login
+            const prov = new ethers.providers.Web3Provider(window.ethereum);
+            setProvider(prov);
+            setSigner(prov.getSigner());
+            setAccount(me.address);
+          }}
+        />
       </div>
     );
   }
 
-  // UI: Wallet connected 
+  // Logged in → show the main app
   return (
     <div className="app">
-      <h1>Rental Smart Contracts DApp</h1>
-
-      {account ? (
-        <div className="connection-status">
-          <p className="connected">
-            Connected: <span className="address">{account}</span>
-          </p>
-          <button className="btn secondary small" onClick={disconnectWallet}>
+      <header className="header">
+        <h1>Rental Smart Contracts DApp</h1>
+        <div className="user-info">
+          <span>Connected as: {account}</span>
+          <button className="btn secondary small" onClick={handleLogout}>
             Disconnect
           </button>
         </div>
-      ) : (
-        <p>Not connected</p>
-      )}
+      </header>
 
-      {/* Navigation */}
+      {/* Tabs navigation */}
       <div className="tab-nav">
         <button
           className={`tab-btn ${activeTab === "deploy" ? "active" : ""}`}
@@ -136,7 +120,7 @@ function App() {
         </button>
       </div>
 
-      {/* Tabs */}
+      {/* Tabs content */}
       {activeTab === "deploy" && (
         <DeployContract
           provider={provider}

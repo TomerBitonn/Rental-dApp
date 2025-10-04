@@ -156,6 +156,8 @@ label {
   font-size: 13px;
   width: auto;
   background: #6c757d;
+  margin-top: auto;
+  margin-left: 10px;
 }
 
 .btn.secondary.small:hover {
