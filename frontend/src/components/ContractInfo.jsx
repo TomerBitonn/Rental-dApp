@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+/*import { useState, useEffect } from "react";
 import { ethers } from "ethers";
 import artifact from "../abi/RentalContract.json";
 import "../styles/Components.css";
@@ -84,7 +84,7 @@ export default function ContractInfo({ provider, signer, account, contractAddres
         {loading ? "Loading..." : "Load Contract"}
       </button>
 
-      {/* Contract Info */}
+      
       {contractData && (
         <>
           <div className="info">
@@ -101,7 +101,7 @@ export default function ContractInfo({ provider, signer, account, contractAddres
             <p><b>Status:</b> {getStatusLabel(contractData[9])}</p>
           </div>
 
-          {/* Actions Section */}
+          
           <div className="actions">
             <h2>Actions</h2>
             <SignContract contractAddress={contractAddress} signer={signer} account={account} />
@@ -109,7 +109,7 @@ export default function ContractInfo({ provider, signer, account, contractAddres
         </>
       )}
 
-      {/* Payments */}
+      
       {payments.length > 0 && (
         <div className="info">
           <h3>Payments</h3>
@@ -117,6 +117,173 @@ export default function ContractInfo({ provider, signer, account, contractAddres
             <p key={i}>
               Amount: {formatRent(p.amount)} | Time:{" "}
               {new Date(p.timestamp * 1000).toLocaleString()}
+            </p>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}*/
+
+import { useState, useEffect } from "react";
+import { ethers } from "ethers";
+import artifact from "../abi/RentalContract.json";
+import "../styles/Components.css";
+import SignContract from "./SignContract";
+import PayRent from "./PayRent";
+
+export default function ContractInfo({
+  provider,
+  signer,
+  account,
+  contractAddress,
+  setContractAddress,
+}) {
+  const [addr, setAddr] = useState(contractAddress || "");
+  const [contractData, setContractData] = useState(null);
+  const [payments, setPayments] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [ethPrice, setEthPrice] = useState(null);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (contractAddress && contractAddress !== addr) {
+      setAddr(contractAddress);
+    }
+  }, [contractAddress]); // eslint-disable-line
+
+   // Fetch ETH price (USD)
+  useEffect(() => {
+    fetch("https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd")
+      .then((res) => res.json())
+      .then((data) => setEthPrice(data.ethereum.usd))
+      .catch(() => {});
+  }, []);
+
+  const toChecksum = (a) => {
+    const s = a.trim();
+    try {
+      // v5
+      if (ethers?.utils?.getAddress) return ethers.utils.getAddress(s);
+      // v6
+      if (ethers?.getAddress) return ethers.getAddress(s);
+    } catch (_) {}
+    throw new Error("Invalid contract address");
+  };
+
+  const loadContract = async () => {
+    try {
+      setError("");
+      if (!provider) throw new Error("No provider. Connect MetaMask.");
+      if (!addr) throw new Error("Please enter a contract address.");
+
+      const checksum = toChecksum(addr);
+      setContractAddress(checksum);
+
+      setLoading(true);
+
+      const contract = new ethers.Contract(checksum, artifact.abi, provider);
+
+      const data = await contract.getContractInfo();
+      setContractData(data);
+
+      const p = await contract.getPayments();
+      setPayments(p);
+    } catch (err) {
+      console.error(err);
+      setError(err.reason || err.message || "Failed to load contract");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatRent = (weiAmount) => {
+    try {
+      if (!weiAmount) return "0";
+      const eth = parseFloat(
+        (ethers?.utils?.formatEther ?? ethers.formatEther)(weiAmount.toString())
+      );
+      if (!ethPrice) return `${eth.toFixed(6)} ETH`;
+      const usd = (eth * ethPrice).toFixed(2);
+      return `${eth.toFixed(6)} ETH ($${usd} USD)`;
+    } catch {
+      return weiAmount?.toString?.() ?? String(weiAmount);
+    }
+  };
+
+  const getStatusLabel = (status) => {
+    switch (Number(status)) {
+      case 0: return "Created";
+      case 1: return "Signed";
+      case 2: return "Locked";
+      case 3: return "Cancelled";
+      case 4: return "Terminated";
+      default: return "Unknown";
+    }
+  };
+
+  return (
+    <div className="card">
+      <h2>Contract Info</h2>
+
+      <label>Contract Address</label>
+      <input
+        type="text"
+        placeholder="0x..."
+        value={addr}
+        onChange={(e) => setAddr(e.target.value)}
+      />
+
+      <button className="btn" onClick={loadContract} disabled={loading || !addr}>
+        {loading ? "Loading..." : "Load Contract"}
+      </button>
+
+      {error && (
+        <p style={{ color: "#ff9e9e", marginTop: 8 }}>
+          ⚠ {error}
+        </p>
+      )}
+
+      {contractData && (
+        <>
+          <div className="info">
+            <h3>Details</h3>
+            <p><b>Landlord:</b> {contractData[0]}</p>
+            <p><b>Tenant:</b> {contractData[1]}</p>
+            <p><b>Rent Amount:</b> {formatRent(contractData[2])}</p>
+            <p><b>Start Date:</b> {new Date(Number(contractData[3]) * 1000).toLocaleDateString()}</p>
+            <p><b>End Date:</b> {new Date(Number(contractData[4]) * 1000).toLocaleDateString()}</p>
+            <p><b>Signed by Landlord:</b> {contractData[5] ? "Yes" : "No"}</p>
+            <p><b>Signed by Tenant:</b> {contractData[6] ? "Yes" : "No"}</p>
+            <p><b>Locked:</b> {contractData[7] ? "Yes" : "No"}</p>
+            <p><b>Active:</b> {contractData[8] ? "Yes" : "No"}</p>
+            <p><b>Status:</b> {getStatusLabel(contractData[9])}</p>
+          </div>
+
+          <div className="actions">
+            <h2>Actions</h2>
+            <SignContract
+              contractAddress={contractAddress || addr}
+              signer={signer}
+              account={account}
+            />
+
+            <PayRent
+              provider={provider}
+              signer={signer}
+              contractAddress={contractAddress || addr}
+              onPaid={() => loadContract()}  
+            />
+          </div>
+        </>
+      )}
+
+      {payments?.length > 0 && (
+        <div className="info">
+          <h3>Payments</h3>
+          {payments.map((p, i) => (
+            <p key={i}>
+              Amount: {formatRent(p.amount)} | Time: {new Date(Number(p.timestamp) * 1000).toLocaleString()}
             </p>
           ))}
         </div>
