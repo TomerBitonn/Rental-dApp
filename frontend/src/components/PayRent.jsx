@@ -1,203 +1,325 @@
-import { useEffect, useMemo, useState } from "react";
+/*import { useEffect, useState } from "react";
 import { ethers } from "ethers";
 import artifact from "../abi/RentalContract.json";
 
-export default function PayRent({ provider, signer, contractAddress }) {
-  const [ethPrice, setEthPrice] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [info, setInfo] = useState("");
-  const [error, setError] = useState("");
-
-  // from contract
-  const [landlord, setLandlord] = useState("");
-  const [tenant, setTenant] = useState("");
-  const [rentWei, setRentWei] = useState(ethers.constants.Zero);
+export default function PayRent({ provider, signer, contractAddress, onPaid }) {
+  const [rentWei, setRentWei] = useState(null);
   const [locked, setLocked] = useState(false);
-  const [active, setActive] = useState(false);
+  const [ethPrice, setEthPrice] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState("");
 
-  // input value (ETH) user will pay. default = rent from contract
-  const [amountEth, setAmountEth] = useState("");
-
-  const address = (contractAddress || "").trim();
-
+  // Load rent amount + locked state
   useEffect(() => {
-    // Fetch ETH price (USD)
+    if (!contractAddress || !provider) {
+      setRentWei(null);
+      setLocked(false);
+      return;
+    }
+    const load = async () => {
+      try {
+        setMsg("");
+        const c = new ethers.Contract(contractAddress, artifact.abi, provider);
+        const info = await c.getContractInfo();
+        setRentWei(info[2]);            // rent in wei
+        setLocked(Boolean(info[7]));    // locked flag
+      } catch (e) {
+        setMsg(e.reason || e.message || "Failed to read contract.");
+      }
+    };
+    load();
+  }, [contractAddress, provider]);
+
+  // ETH price (USD)
+  useEffect(() => {
     fetch("https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd")
-      .then((r) => r.json())
-      .then((data) => setEthPrice(data?.ethereum?.usd ?? null))
-      .catch(() => setEthPrice(null));
+      .then(r => r.json())
+      .then(d => setEthPrice(d?.ethereum?.usd))
+      .catch(() => {});
   }, []);
 
-  const readContract = useMemo(() => {
-    if (!provider || !address || !ethers.utils.isAddress(address)) return null;
-    return new ethers.Contract(address, artifact.abi, provider);
-  }, [provider, address]);
+  const formatEthUsd = () => {
+    if (!rentWei) return "";
+    const fmt = (ethers?.utils?.formatEther ?? ethers.formatEther)(rentWei.toString());
+    const eth = parseFloat(fmt);
+    const usd = ethPrice ? ` ($${(eth * ethPrice).toFixed(2)} USD)` : "";
+    return `${eth.toFixed(6)} ETH${usd}`;
+  };
 
-  const writeContract = useMemo(() => {
-    if (!signer || !address || !ethers.utils.isAddress(address)) return null;
-    return new ethers.Contract(address, artifact.abi, signer);
-  }, [signer, address]);
-
-  const fetchContract = async () => {
-    setError("");
-    setInfo("");
-    if (!readContract) return;
+  const pay = async () => {
     try {
-      setLoading(true);
-      // getContractInfo(): [0]=landlord, [1]=tenant, [2]=rentAmount(wei),
-      // [3]=start, [4]=end, [5]=signedByLandlord, [6]=signedByTenant,
-      // [7]=locked, [8]=active, [9]=status(enum)
-      const data = await readContract.getContractInfo();
-      const _landlord = data[0];
-      const _tenant   = data[1];
-      const _rentWei  = data[2];
-      const _locked   = Boolean(data[7]);
-      const _active   = Boolean(data[8]);
+      setBusy(true);
+      setMsg("");
+      if (!signer) throw new Error("No signer. Connect your wallet.");
+      if (!rentWei) throw new Error("Missing rent amount.");
 
-      setLandlord(_landlord);
-      setTenant(_tenant);
-      setRentWei(_rentWei);
-      setLocked(_locked);
-      setActive(_active);
+      const c = new ethers.Contract(contractAddress, artifact.abi, signer);
+      const tx = await c.payRent({ value: rentWei });
+      await tx.wait();
 
-      const defaults = ethers.utils.formatEther(_rentWei?.toString() ?? "0");
-      setAmountEth(defaults); // show the contractual rent as default
-
+      setMsg("Rent paid successfully.");
+      onPaid?.();
     } catch (e) {
-      console.error(e);
-      setError("Failed to read contract info. Please verify the address and network.");
+      setMsg(e.reason || e.message || "Failed to pay rent.");
     } finally {
-      setLoading(false);
+      setBusy(false);
     }
   };
 
+  const disabled = !contractAddress || !locked || !rentWei || busy;
+
+  return (
+    <div className="card">
+      <h2>Pay Rent</h2>
+
+      {!contractAddress && (
+        <p className="note">Load a contract address first.</p>
+      )}
+
+      {rentWei && (
+        <p className="note">Amount due: <b>{formatEthUsd()}</b></p>
+      )}
+
+      {!locked && contractAddress && (
+        <p className="note-warn">Contract must be locked before paying.</p>
+      )}
+
+      <button className="btn" onClick={pay} disabled={disabled}>
+        {busy ? "Paying..." : "Pay Rent"}
+      </button>
+
+      {msg && <p className="note" style={{ marginTop: 8 }}>{msg}</p>}
+    </div>
+  );
+}*/
+
+/*import { useEffect, useMemo, useState } from "react";
+import { ethers } from "ethers";
+import artifact from "../abi/RentalContract.json";
+
+export default function PayRent({
+  provider,
+  signer,
+  account,
+  contractAddress,
+  onChange,        // parent can bump a refresh counter
+  refreshKey = 0,  // parent bump forces reload
+}) {
+  const [ethPrice, setEthPrice] = useState(null);
+  const [tenant, setTenant]   = useState("");
+  const [locked, setLocked]   = useState(false);
+  const [rentWei, setRentWei] = useState(0n);
+  const [busy, setBusy]       = useState(false);
+  const [msg, setMsg]         = useState("");
+
+  const lower = (s) => (s ? s.toLowerCase() : s);
+
+  // Load ETH price (USD)
   useEffect(() => {
-    fetchContract();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [readContract]);
+    fetch("https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd")
+      .then(r => r.json())
+      .then(d => setEthPrice(d?.ethereum?.usd ?? null))
+      .catch(() => {});
+  }, []);
 
-  // current connected address (if available)
-  const [connected, setConnected] = useState("");
-  useEffect(() => {
-    let stale = false;
-    const getAccount = async () => {
-      try {
-        if (!signer) return setConnected("");
-        const addr = await signer.getAddress();
-        if (!stale) setConnected(addr);
-      } catch {
-        if (!stale) setConnected("");
-      }
-    };
-    getAccount();
-    return () => { stale = true; };
-  }, [signer]);
+  // Load contract snapshot (always from chain, fresh)
+  const load = async () => {
+    setMsg("");
+    if (!provider || !contractAddress) return;
+    try {
+      const c = new ethers.Contract(contractAddress, artifact.abi, provider);
+      const info = await c.getContractInfo();
+      // tuple: [0] landlord, [1] tenant, [2] rentWei, [3] start, [4] end, [5] LL signed, [6] TN signed, [7] locked, [8] active, [9] status
+      setTenant(info[1]);
+      setRentWei(info[2]);
+      setLocked(Boolean(info[7]));
+    } catch (e) {
+      setMsg(e.reason || e.message || "Failed to read contract.");
+    }
+  };
 
-  const isTenant = connected && tenant && connected.toLowerCase() === tenant.toLowerCase();
-  const canPay   = !!writeContract && isTenant && locked && active && Number(amountEth) > 0;
+  // Reload when address changes or parent bumps refresh
+  useEffect(() => { load(); }, [contractAddress, provider, refreshKey]);
 
-  const usdForInput = ethPrice && amountEth
-    ? (parseFloat(amountEth || "0") * Number(ethPrice)).toFixed(2)
-    : null;
+  // Amount due: contract stores rent in WEI (monthly). Convert to ETH & USD
+  const amountEth = useMemo(() => {
+    try {
+      const fmt = (ethers.utils?.formatEther ?? ethers.formatEther);
+      return Number(fmt(rentWei));
+    } catch {
+      return 0;
+    }
+  }, [rentWei]);
+
+  const amountUsd = useMemo(() => {
+    if (!ethPrice) return null;
+    return (amountEth * ethPrice).toFixed(2);
+  }, [amountEth, ethPrice]);
+
+  // Why the button is disabled
+  const disabledReason = useMemo(() => {
+    if (!contractAddress) return "Enter/select a contract first.";
+    if (!locked) return "Contract must be locked before paying.";
+    if (!signer) return "Please connect a wallet.";
+    if (lower(account) !== lower(tenant)) return "Only the tenant can pay.";
+    if (amountEth <= 0) return "Nothing to pay.";
+    return "";
+  }, [contractAddress, locked, signer, account, tenant, amountEth]);
 
   const pay = async () => {
-    setError("");
-    setInfo("");
-
-    if (!canPay) {
-      if (!isTenant) {
-        setInfo("Only the tenant address may pay the rent.");
-      } else if (!locked) {
-        setInfo("The contract must be locked before payments can be made.");
-      } else if (!active) {
-        setInfo("This contract is not active.");
-      } else if (!amountEth || Number(amountEth) <= 0) {
-        setInfo("Please enter a positive amount in ETH.");
-      }
-      return;
-    }
-
+    if (disabledReason) return;
+    setBusy(true);
+    setMsg("");
     try {
-      setBusy(true);
-      const value = ethers.utils.parseEther(String(amountEth));
-      const tx = await writeContract.payRent({ value }); // your payable function
-      setInfo("Submitting transaction… Please confirm in your wallet and wait for confirmation.");
-      const receipt = await tx.wait();
-      if (receipt.status !== 1) throw new Error("Transaction failed.");
-      setInfo("Rent payment completed successfully.");
-      // Optionally refresh contract info (or a payment list)
-      await fetchContract();
+      const c = new ethers.Contract(contractAddress, artifact.abi, signer);
+      const parse = (ethers.utils?.parseEther ?? ethers.parseEther);
+      const tx = await c.payRent({ value: parse(String(amountEth)) });
+      setMsg("Waiting for on-chain confirmation…");
+      await tx.wait();
+      setMsg("Payment successful.");
+      onChange?.();      // tell parent to refresh siblings (Lock/Info)
+      await load();      // self refresh
     } catch (e) {
-      console.error(e);
-      const msg = e?.error?.message || e?.reason || e?.message || "Payment failed.";
-      setError(msg);
+      setMsg(e?.reason || e?.message || "Payment failed.");
     } finally {
       setBusy(false);
     }
   };
 
   return (
-    <div className="action-card">
-      <h3>Pay Rent</h3>
+    <div className="card">
+      <h2>Pay Rent</h2>
 
-      {!address ? (
-        <p>Enter/select a contract address first.</p>
-      ) : (
-        <>
-          <div className="info" style={{ marginTop: 8 }}>
-            <p><b>Landlord:</b> {landlord || "-"}</p>
-            <p><b>Tenant:</b> {tenant || "-"}</p>
-            <p>
-              <b>Rent (from contract):</b>{" "}
-              {ethers.utils.formatEther(rentWei?.toString() || "0")} ETH
-              {ethPrice && rentWei
-                ? ` ($${(Number(ethers.utils.formatEther(rentWei.toString())) * Number(ethPrice)).toFixed(2)} USD)`
-                : ""}
-            </p>
-            <p><b>Locked:</b> {locked ? "Yes" : "No"} | <b>Active:</b> {active ? "Yes" : "No"}</p>
-            {connected && (
-              <p><b>Connected as:</b> {connected}{isTenant ? " (tenant)" : ""}</p>
-            )}
-          </div>
+      <p style={{ margin: 0 }}>
+        Amount due: <b>{amountEth.toFixed(6)} ETH</b>
+        {amountUsd ? <> (${amountUsd} USD)</> : null}
+      </p>
 
-          <label style={{ marginTop: 12 }}>Amount to pay (ETH)</label>
-          <input
-            type="number"
-            min="0"
-            step="0.000000000000000001"
-            value={amountEth}
-            onChange={(e) => setAmountEth(e.target.value)}
-            placeholder="0.0"
-          />
-          <div style={{ opacity: .9, marginTop: 6 }}>
-            {usdForInput ? <>≈ <b>${usdForInput}</b> USD</> : "USD price unavailable"}
-          </div>
-
-          {info && <div className="notice info" style={{ marginTop: 12 }}>{info}</div>}
-          {error && <div className="notice error" style={{ marginTop: 12 }}>{error}</div>}
-
-          <div style={{ display: "flex", gap: 12, marginTop: 14, flexWrap: "wrap" }}>
-            <button className="btn secondary" onClick={fetchContract} disabled={loading || busy}>
-              {loading ? "Refreshing…" : "Refresh"}
-            </button>
-            <button className="btn" onClick={pay} disabled={!canPay || busy}>
-              {busy ? "Paying…" : "Pay rent"}
-            </button>
-          </div>
-
-          {!isTenant && (
-            <div className="notice warn" style={{ marginTop: 12 }}>
-              Only the <b>tenant</b> address can pay the rent.
-            </div>
-          )}
-          {(!locked || !active) && (
-            <div className="notice warn" style={{ marginTop: 8 }}>
-              The contract must be <b>locked and active</b> to accept payments.
-            </div>
-          )}
-        </>
+      {!!disabledReason && (
+        <p className="note note--warn" style={{ marginTop: 10 }}>
+          {disabledReason}
+        </p>
       )}
+
+      <div style={{ display: "flex", gap: 12, marginTop: 14 }}>
+        <button className="btn" onClick={pay} disabled={!!disabledReason || busy}>
+          {busy ? "Paying…" : "Pay Rent"}
+        </button>
+        <button
+          className="btn secondary small"
+          onClick={load}
+          disabled={busy}
+          title="Refresh"
+        >
+          Refresh
+        </button>
+      </div>
+
+      {!!msg && <p className="note" style={{ marginTop: 10 }}>{msg}</p>}
     </div>
   );
+}*/
+
+// src/components/PayRent.jsx
+import { useEffect, useState } from "react";
+import { ethers } from "ethers";
+import artifact from "../abi/RentalContract.json";
+
+export default function PayRent({ provider, signer, account, contractAddress, refreshKey, onChanged }) {
+  const [ethPrice, setEthPrice] = useState(null);
+  const [locked, setLocked] = useState(false);
+  const [tenant, setTenant] = useState("");
+  const [rentWei, setRentWei] = useState("0");
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState(null);
+
+  const isAddr = (a) => {
+    try { return (ethers.utils?.isAddress ?? ethers.isAddress)(a); } catch { return false; }
+  };
+
+  useEffect(() => {
+    fetch("https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd")
+      .then(r => r.json())
+      .then(d => setEthPrice(d?.ethereum?.usd ?? null))
+      .catch(() => {});
+  }, []);
+
+  async function read() {
+    if (!provider || !isAddr(contractAddress)) return;
+    const c = new ethers.Contract(contractAddress, artifact.abi, provider);
+    const info = await c.getContractInfo();
+    setTenant(info[1]);
+    setRentWei(info[2].toString());
+    setLocked(Boolean(info[7]));
+  }
+
+  useEffect(() => { read(); }, [provider, contractAddress, refreshKey]);
+
+  function fmt(wei) {
+    const eth = parseFloat((ethers.utils?.formatEther ?? ethers.formatEther)(wei));
+    if (!ethPrice) return `${eth.toFixed(6)} ETH`;
+    return `${eth.toFixed(6)} ETH ($${(eth * ethPrice).toFixed(2)} USD)`;
+  }
+
+  function pretty(e) {
+    return e?.reason || e?.data?.message || e?.error?.message || e?.message || "Payment failed";
+  }
+
+  async function pay() {
+    try {
+      if (!signer) throw new Error("No signer. Connect your wallet.");
+      if (!isAddr(contractAddress)) throw new Error("Invalid contract address.");
+
+      // ודאי מעודכן מהשרשרת ממש עכשיו
+      await read();
+      if (!locked) throw new Error("Contract must be locked before paying.");
+      if (!tenant || account?.toLowerCase() !== tenant.toLowerCase()) {
+        throw new Error("Only the tenant can pay the rent.");
+      }
+
+      setBusy(true);
+      setNote({ type: "info", text: "Submitting payment… Please confirm in your wallet and wait for confirmation." });
+
+      const c = new ethers.Contract(contractAddress, artifact.abi, signer);
+      const tx = await c.payRent({ value: rentWei });
+
+      setNote({ type: "info", text: `Transaction sent (${tx.hash.slice(0, 10)}…). Waiting for confirmation…` });
+      await tx.wait(1);
+
+      setNote({ type: "success", text: "Payment confirmed. Thank you!" });
+      onChanged?.(); // רענון שאר הקומפוננטות
+    } catch (e) {
+      setNote({ type: "error", text: pretty(e) });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const disabled = busy || !isAddr(contractAddress) || !locked || !tenant || account?.toLowerCase() !== tenant.toLowerCase();
+
+  return (
+    <div className="card">
+      <h2>Pay Rent</h2>
+      <p>Amount due: <b>{fmt(rentWei)}</b></p>
+
+      {!locked && <Notice type="error">Contract must be locked before paying.</Notice>}
+      {tenant && account && account.toLowerCase() !== tenant.toLowerCase() && (
+        <Notice type="error">Only the tenant can pay this contract.</Notice>
+      )}
+      {note && <Notice type={note.type}>{note.text}</Notice>}
+
+      <div style={{ display: "flex", gap: 12 }}>
+        <button className="btn secondary" onClick={read} disabled={busy || !isAddr(contractAddress)}>
+          Refresh
+        </button>
+        <button className="btn" onClick={pay} disabled={disabled}>
+          {busy ? "Loading…" : "Pay Rent"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function Notice({ type = "info", children }) {
+  return <div className={`notice ${type}`}>{children}</div>;
 }

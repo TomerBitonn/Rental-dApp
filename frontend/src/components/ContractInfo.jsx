@@ -130,7 +130,6 @@ import { ethers } from "ethers";
 import artifact from "../abi/RentalContract.json";
 import "../styles/Components.css";
 import SignContract from "./SignContract";
-import PayRent from "./PayRent";
 
 export default function ContractInfo({
   provider,
@@ -138,6 +137,8 @@ export default function ContractInfo({
   account,
   contractAddress,
   setContractAddress,
+  refreshKey,          // חדש
+  onRefresh,           // חדש – נקרא מהכפתור
 }) {
   const [addr, setAddr] = useState(contractAddress || "");
   const [contractData, setContractData] = useState(null);
@@ -146,13 +147,14 @@ export default function ContractInfo({
   const [ethPrice, setEthPrice] = useState(null);
   const [error, setError] = useState("");
 
+  // סנכרון שדה הכתובת כשיורש מעדכן contractAddress (למשל אחרי Deploy)
   useEffect(() => {
     if (contractAddress && contractAddress !== addr) {
       setAddr(contractAddress);
     }
   }, [contractAddress]); // eslint-disable-line
 
-   // Fetch ETH price (USD)
+  // מחיר ETH
   useEffect(() => {
     fetch("https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd")
       .then((res) => res.json())
@@ -160,49 +162,51 @@ export default function ContractInfo({
       .catch(() => {});
   }, []);
 
+  // תמיכה ב-v5/v6
   const toChecksum = (a) => {
     const s = a.trim();
     try {
-      // v5
       if (ethers?.utils?.getAddress) return ethers.utils.getAddress(s);
-      // v6
       if (ethers?.getAddress) return ethers.getAddress(s);
     } catch (_) {}
     throw new Error("Invalid contract address");
   };
 
-  const loadContract = async () => {
+  const fetchAll = async (silent = false) => {
+    if (!addr || !provider) return;
     try {
       setError("");
-      if (!provider) throw new Error("No provider. Connect MetaMask.");
-      if (!addr) throw new Error("Please enter a contract address.");
-
+      if (!silent) setLoading(true);
       const checksum = toChecksum(addr);
-      setContractAddress(checksum);
-
-      setLoading(true);
+      // מעדכן למעלה – שכל שאר הקומפוננטות ישתמשו באותה כתובת
+      setContractAddress?.(checksum);
 
       const contract = new ethers.Contract(checksum, artifact.abi, provider);
-
       const data = await contract.getContractInfo();
       setContractData(data);
 
       const p = await contract.getPayments();
       setPayments(p);
     } catch (err) {
-      console.error(err);
       setError(err.reason || err.message || "Failed to load contract");
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
+
+  const loadContract = async () => fetchAll(false);
+
+  // רענון אוטומי כש־refreshKey משתנה (למשל אחרי נעילה/תשלום/דפלוי)
+  useEffect(() => {
+    if (addr && provider) fetchAll(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshKey]);
 
   const formatRent = (weiAmount) => {
     try {
       if (!weiAmount) return "0";
-      const eth = parseFloat(
-        (ethers?.utils?.formatEther ?? ethers.formatEther)(weiAmount.toString())
-      );
+      const fmt = (ethers?.utils?.formatEther ?? ethers.formatEther)(weiAmount.toString());
+      const eth = parseFloat(fmt);
       if (!ethPrice) return `${eth.toFixed(6)} ETH`;
       const usd = (eth * ethPrice).toFixed(2);
       return `${eth.toFixed(6)} ETH ($${usd} USD)`;
@@ -224,7 +228,14 @@ export default function ContractInfo({
 
   return (
     <div className="card">
-      <h2>Contract Info</h2>
+      <div className="card-toolbar" style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12}}>
+        <h2 style={{margin:0}}>Contract Info</h2>
+        <div style={{display:"flex",gap:8}}>
+          <button className="btn small secondary" onClick={() => onRefresh?.()} disabled={loading || !addr}>
+            Refresh
+          </button>
+        </div>
+      </div>
 
       <label>Contract Address</label>
       <input
@@ -263,16 +274,10 @@ export default function ContractInfo({
           <div className="actions">
             <h2>Actions</h2>
             <SignContract
-              contractAddress={contractAddress || addr}
+              contractAddress={contractAddress}
               signer={signer}
               account={account}
-            />
-
-            <PayRent
-              provider={provider}
-              signer={signer}
-              contractAddress={contractAddress || addr}
-              onPaid={() => loadContract()}  
+              // אם יש כאן פעולה שמבצעת טרנזקציה – שתקרא onRefresh אחרי הצלחה
             />
           </div>
         </>

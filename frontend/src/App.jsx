@@ -29,6 +29,8 @@ function App() {
   const [activeTab, setActiveTab] = useState("deploy");
   const [loading, setLoading] = useState(true);
   const [infoKey, setInfoKey] = useState(0);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const bumpRefresh = () => setRefreshKey(k => k + 1);
 
 
   useEffect(() => {
@@ -208,22 +210,32 @@ function App() {
 ) : (
 
   <section className="info-lock-stack">
-    <ContractInfo
-      key={infoKey} 
-      provider={provider}
-      signer={signer}
-      account={account}
-      contractAddress={contractAddress}
-      setContractAddress={setContractAddress}
-    />
+  <ContractInfo
+    provider={provider}
+    signer={signer}
+    account={account}
+    contractAddress={contractAddress}
+    setContractAddress={setContractAddress}
+    // אופציונלי: onChange={() => bumpRefresh()}
+  />
 
-    <LockContract
-      provider={provider}
-      signer={signer}
-      contractAddress={contractAddress} 
-        onLocked={() => setInfoKey(k => k + 1)}
-    />
-  </section>
+  <LockContract
+    provider={provider}
+    signer={signer}
+    contractAddress={contractAddress}
+    onChange={bumpRefresh}   // אחרי lock מוצלח – תרענן את כולם
+    refreshKey={refreshKey}
+  />
+
+  <PayRent
+    provider={provider}
+    signer={signer}
+    account={account}
+    contractAddress={contractAddress}
+    onChange={bumpRefresh}   // אחרי תשלום – תרענן את כולם
+    refreshKey={refreshKey}
+  />
+</section>
 )}
 
 </main>
