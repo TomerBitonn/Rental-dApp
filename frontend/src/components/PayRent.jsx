@@ -220,7 +220,7 @@ export default function PayRent({
   );
 }*/
 
-// src/components/PayRent.jsx
+
 import { useEffect, useState } from "react";
 import { ethers } from "ethers";
 import artifact from "../abi/RentalContract.json";
@@ -270,7 +270,6 @@ export default function PayRent({ provider, signer, account, contractAddress, re
       if (!signer) throw new Error("No signer. Connect your wallet.");
       if (!isAddr(contractAddress)) throw new Error("Invalid contract address.");
 
-      // ודאי מעודכן מהשרשרת ממש עכשיו
       await read();
       if (!locked) throw new Error("Contract must be locked before paying.");
       if (!tenant || account?.toLowerCase() !== tenant.toLowerCase()) {
@@ -287,7 +286,7 @@ export default function PayRent({ provider, signer, account, contractAddress, re
       await tx.wait(1);
 
       setNote({ type: "success", text: "Payment confirmed. Thank you!" });
-      onChanged?.(); // רענון שאר הקומפוננטות
+      onChanged?.(); 
     } catch (e) {
       setNote({ type: "error", text: pretty(e) });
     } finally {

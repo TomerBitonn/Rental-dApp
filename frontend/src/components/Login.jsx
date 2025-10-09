@@ -11,26 +11,18 @@ function Login({ onLoginSuccess }) {
     try {
       setLoading(true);
       setStatus("Connecting to MetaMask...");
-
-      // Check if MetaMask is installed
       if (!window.ethereum) {
         alert("Please install MetaMask");
         return;
       }
-
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const [rawAddress] = await provider.send("eth_requestAccounts", []);
       const signer = provider.getSigner();
-
-      // Ensure the address is checksummed (EIP-55)
       const address = ethers.utils.getAddress(rawAddress);
       const chainId = await signer.getChainId();
 
-      // Step 1: get nonce from backend
       setStatus("Requesting nonce from backend...");
       const { nonce } = await getNonce(address);
-
-      // Step 2: build proper SIWE message
       const domain = window.location.hostname;
       const origin = window.location.origin;
       const issuedAt = new Date().toISOString();
@@ -45,20 +37,14 @@ function Login({ onLoginSuccess }) {
         nonce,
         issuedAt,
       });
-
-      // Prepare the message for signing
       const message = siwe.prepareMessage();
-
-      // Step 3: sign the message
       setStatus("Waiting for signature...");
       const signature = await signer.signMessage(message);
-
-      // Step 4: send to backend for verification
       setStatus("Verifying signature...");
       const resp = await verifyLogin({ address, message, signature });
       if (!resp.ok) throw new Error(resp.error || "Login failed");
 
-      // Step 5: get user info
+  
       const me = await getMe();
       setStatus("Logged in!");
       onLoginSuccess(me.user);

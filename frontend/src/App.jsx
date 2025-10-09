@@ -186,63 +186,60 @@ function App() {
 
     
     <nav className="tab-nav tabs--compact" data-active={activeTab}>
-  <button className={`tab-btn ${activeTab === "deploy" ? "active" : ""}`} onClick={() => setActiveTab("deploy")}>
-    Deploy Contract
-  </button>
-  <button className={`tab-btn ${activeTab === "info" ? "active" : ""}`} onClick={() => setActiveTab("info")}>
-    Contract Info
-  </button>
-</nav>
+      <button className={`tab-btn ${activeTab === "deploy" ? "active" : ""}`} onClick={() => setActiveTab("deploy")}>
+        Deploy Contract
+      </button>
+      <button className={`tab-btn ${activeTab === "info" ? "active" : ""}`} onClick={() => setActiveTab("info")}>
+        Contract Info
+      </button>
+    </nav>
 
-<main className="main">
-  {activeTab === "deploy" ? (
-  <DeployContract
-    provider={provider}
-    signer={signer}
-    account={account}
-    setContractAddress={(addr) => {
-      setContractAddress(addr);
-      setActiveTab("info");
-      setInfoKey(k => k + 1);
-    }}
-    contractAddress={contractAddress}
-  />
-) : (
+    <main className="main">
+      {activeTab === "deploy" ? (
+      <DeployContract
+        provider={provider}
+        signer={signer}
+        account={account}
+        setContractAddress={(addr) => {
+          setContractAddress(addr);
+          setActiveTab("info");
+          setInfoKey(k => k + 1);
+        }}
+        contractAddress={contractAddress}
+      />
+    ) : (
 
-  <section className="info-lock-stack">
-  <ContractInfo
-    provider={provider}
-    signer={signer}
-    account={account}
-    contractAddress={contractAddress}
-    setContractAddress={setContractAddress}
-    // אופציונלי: onChange={() => bumpRefresh()}
-  />
+        <section className="info-lock-stack">
+          <ContractInfo
+            provider={provider}
+            signer={signer}
+            account={account}
+            contractAddress={contractAddress}
+            setContractAddress={setContractAddress}
+            
+          />
 
-  <LockContract
-    provider={provider}
-    signer={signer}
-    contractAddress={contractAddress}
-    onChange={bumpRefresh}   // אחרי lock מוצלח – תרענן את כולם
-    refreshKey={refreshKey}
-  />
+          <LockContract
+            provider={provider}
+            signer={signer}
+            contractAddress={contractAddress}
+            onChange={bumpRefresh}   
+            refreshKey={refreshKey}
+          />
 
-  <PayRent
-    provider={provider}
-    signer={signer}
-    account={account}
-    contractAddress={contractAddress}
-    onChange={bumpRefresh}   // אחרי תשלום – תרענן את כולם
-    refreshKey={refreshKey}
-  />
-</section>
-)}
+          <PayRent
+            provider={provider}
+            signer={signer}
+            account={account}
+            contractAddress={contractAddress}
+            onChange={bumpRefresh}   
+            refreshKey={refreshKey}
+          />
+        </section>
+      )}
 
-</main>
-
-
-
-    </div>
+    </main>
+  </div>
   );
 }
 

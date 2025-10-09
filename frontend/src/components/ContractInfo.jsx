@@ -137,8 +137,8 @@ export default function ContractInfo({
   account,
   contractAddress,
   setContractAddress,
-  refreshKey,          // חדש
-  onRefresh,           // חדש – נקרא מהכפתור
+  refreshKey,        
+  onRefresh,           
 }) {
   const [addr, setAddr] = useState(contractAddress || "");
   const [contractData, setContractData] = useState(null);
@@ -147,7 +147,6 @@ export default function ContractInfo({
   const [ethPrice, setEthPrice] = useState(null);
   const [error, setError] = useState("");
 
-  // סנכרון שדה הכתובת כשיורש מעדכן contractAddress (למשל אחרי Deploy)
   useEffect(() => {
     if (contractAddress && contractAddress !== addr) {
       setAddr(contractAddress);
@@ -162,7 +161,6 @@ export default function ContractInfo({
       .catch(() => {});
   }, []);
 
-  // תמיכה ב-v5/v6
   const toChecksum = (a) => {
     const s = a.trim();
     try {
@@ -178,9 +176,7 @@ export default function ContractInfo({
       setError("");
       if (!silent) setLoading(true);
       const checksum = toChecksum(addr);
-      // מעדכן למעלה – שכל שאר הקומפוננטות ישתמשו באותה כתובת
       setContractAddress?.(checksum);
-
       const contract = new ethers.Contract(checksum, artifact.abi, provider);
       const data = await contract.getContractInfo();
       setContractData(data);
@@ -195,11 +191,8 @@ export default function ContractInfo({
   };
 
   const loadContract = async () => fetchAll(false);
-
-  // רענון אוטומי כש־refreshKey משתנה (למשל אחרי נעילה/תשלום/דפלוי)
   useEffect(() => {
     if (addr && provider) fetchAll(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [refreshKey]);
 
   const formatRent = (weiAmount) => {
@@ -277,7 +270,6 @@ export default function ContractInfo({
               contractAddress={contractAddress}
               signer={signer}
               account={account}
-              // אם יש כאן פעולה שמבצעת טרנזקציה – שתקרא onRefresh אחרי הצלחה
             />
           </div>
         </>

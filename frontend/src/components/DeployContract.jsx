@@ -46,7 +46,7 @@ export default function DeployContract({ signer, account, setContractAddress, co
 
       const factory = new ethers.ContractFactory(artifact.abi, artifact.bytecode, signer);
 
-      // Convert USD → ETH → wei
+      // Convert USD -> ETH -> wei
       const rentEth = usdRent / ethPrice;
       const contract = await factory.deploy(
         tenant,
