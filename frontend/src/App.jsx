@@ -18,6 +18,8 @@ import Tomerpic from "../assets/Tomerpic2.png";
 import Lizapic from "../assets/lizapic.png";
 import Davidpic from "../assets/davidpic.png";
 import Inbarpic from "../assets/inbarpic.png";
+import SignContract from "./components/SignContract";
+import PaymentsHistory from "./components/PaymentsHistory";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -28,17 +30,15 @@ function App() {
   const [contractAddress, setContractAddress] = useState(null);
   const [activeTab, setActiveTab] = useState("deploy");
   const [loading, setLoading] = useState(true);
-  const [infoKey, setInfoKey] = useState(0);
   const [refreshKey, setRefreshKey] = useState(0);
   const bumpRefresh = () => setRefreshKey(k => k + 1);
-
 
   useEffect(() => {
     const checkSession = async () => {
       try {
         const res = await getMe();
         if (res.user) setUser(res.user);
-      } catch {} finally {
+      } finally {
         setLoading(false);
       }
     };
@@ -178,7 +178,7 @@ function App() {
       <div className="connected-bar">
         <div className="connected-pill">
           <span className="address">Connected as: {accountRaw ?? account}</span>
-          <button className="btn secondary small" onClick={handleLogout}>
+          <button className="btn-secondary-small"  onClick={handleLogout}>
             Disconnect
           </button>
         </div>
@@ -192,6 +192,9 @@ function App() {
       <button className={`tab-btn ${activeTab === "info" ? "active" : ""}`} onClick={() => setActiveTab("info")}>
         Contract Info
       </button>
+      <button className={`tab-btn ${activeTab === "payments" ? "active" : ""}`} onClick={() => setActiveTab("payments")}>
+        Payments
+      </button>
     </nav>
 
     <main className="main">
@@ -203,20 +206,34 @@ function App() {
         setContractAddress={(addr) => {
           setContractAddress(addr);
           setActiveTab("info");
-          setInfoKey(k => k + 1);
         }}
         contractAddress={contractAddress}
       />
-    ) : (
+    ) : activeTab === "payments" ? (
+      <PaymentsHistory
+        provider={provider}
+        contractAddress={contractAddress}
+        refreshKey={refreshKey}
+        appName="Rental Smart Contracts DApp"
+        logoUrl={logoUrl}
+      />
+  ) : (
 
         <section className="info-lock-stack">
+          
           <ContractInfo
             provider={provider}
             signer={signer}
             account={account}
             contractAddress={contractAddress}
             setContractAddress={setContractAddress}
-            
+          />
+
+          <SignContract
+            provider={provider}
+            contractAddress={contractAddress}
+            signer={signer}
+            account={account}
           />
 
           <LockContract
