@@ -43,7 +43,7 @@ Rent amount (USD → ETH auto conversion via CoinGecko API)
 
 Start/end dates
 
-**✅ View Contract Info****
+**✅ View Contract Info**
 Display contract metadata:
 
 Landlord & tenant
