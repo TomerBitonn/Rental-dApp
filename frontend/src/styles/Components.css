@@ -200,6 +200,10 @@
 .tab-nav.tabs--compact[data-active="info"]     { --slider-left: calc(6px + (var(--btn-w) + 6px) * 1); }
 .tab-nav.tabs--compact[data-active="payments"] { --slider-left: calc(6px + (var(--btn-w) + 6px) * 2); }
 .tab-nav.tabs--compact[data-active="rent"]     { --slider-left: calc(var(--gap) + (var(--btn-w) + var(--gap)) * 3); }
+.tab-nav.tabs--compact[data-tabs="5"][data-active="cancel"],
+.tab-nav.tabs--compact[data-tabs="5"][data-active="terminate"] {
+  --slider-left: calc(6px + (var(--btn-w) + var(--gap)) * 4);
+}
 
 @media (max-width: 480px){
   .tab-nav.tabs--compact{ --btn-w: 140px; } /* או 120px אם צפוף */

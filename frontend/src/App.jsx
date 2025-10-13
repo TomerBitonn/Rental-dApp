@@ -84,24 +84,50 @@ function App() {
     return () => window.ethereum.removeListener("accountsChanged", onChange);
   }, []);
 
-  // readIsLocked – asks the contract if it's locked (true/false)
-  // we call this whenever address/provider/refreshKey changes
-  useEffect(() => {
-    const readIsLocked = async () => {
-      try {
-        if (!provider || !contractAddress) {
-          setIsLocked(false);
-          return;
-        }
-        const c = new ethers.Contract(contractAddress, artifact.abi, provider);
-        const v = await c.isLocked();
-        setIsLocked(Boolean(v));
-      } catch {
-        setIsLocked(false);
+ useEffect(() => {
+  let c;        
+  let mounted = true;
+
+  const readIsLocked = async () => {
+    try {
+      if (!provider || !contractAddress) {
+        if (mounted) setIsLocked(false);
+        return;
       }
-    };
-    readIsLocked();
-  }, [provider, contractAddress, refreshKey]);
+      c = new ethers.Contract(contractAddress, artifact.abi, provider);
+
+     
+      let locked = false;
+      try {
+        locked = Boolean(await c.isLocked());
+      } catch {
+        
+        try {
+          const info = await c.getContractInfo();
+          locked = Boolean(info[7]);
+        } catch {
+          locked = false;
+        }
+      }
+      if (mounted) setIsLocked(locked);
+
+      c.on("Locked", () => {
+        if (mounted) setIsLocked(true);
+      });
+    } catch {
+      if (mounted) setIsLocked(false);
+    }
+  };
+
+  readIsLocked();
+
+  return () => {
+    mounted = false;
+    try {
+      if (c?.removeAllListeners) c.removeAllListeners("Locked");
+    } catch {}
+  };
+}, [provider, contractAddress, refreshKey]);
 
   const handleLogout = async () => {
     await logout();
@@ -205,6 +231,8 @@ function App() {
     );
   }
 
+  const tabCount = 3 + (isLandlord ? 1 : 0) + (extraTab ? 1 : 0);
+
   return (
     <div className="app app--authed">
      
@@ -228,23 +256,59 @@ function App() {
       </div>
 
     
-    <nav className="tab-nav tabs--compact" data-active={activeTab} >
-      <button className={`tab-btn ${activeTab === "deploy" ? "active" : ""}`} onClick={() => setActiveTab("deploy")}>
-        Deploy Contract
-      </button>
-      <button className={`tab-btn ${activeTab === "info" ? "active" : ""}`} onClick={() => setActiveTab("info")}>
-        Contract Info
-      </button>
-      <button className={`tab-btn ${activeTab === "payments" ? "active" : ""}`} onClick={() => setActiveTab("payments")}>
-        Payments
-      </button>
+    <nav
+  className="tab-nav tabs--compact"
+  data-active={activeTab}
+  data-tabs={String(tabCount)}
+>
+  <button
+    className={`tab-btn ${activeTab === "deploy" ? "active" : ""}`}
+    onClick={() => setActiveTab("deploy")}
+  >
+    Deploy Contract
+  </button>
 
-      {isLandlord && (
-        <button className={`tab-btn ${activeTab === "rent" ? "active" : ""}`} onClick={() => setActiveTab("rent")}>
-          Rent Update
-        </button>
-      )}
-    </nav>
+  <button
+    className={`tab-btn ${activeTab === "info" ? "active" : ""}`}
+    onClick={() => setActiveTab("info")}
+  >
+    Contract Info
+  </button>
+
+  <button
+    className={`tab-btn ${activeTab === "payments" ? "active" : ""}`}
+    onClick={() => setActiveTab("payments")}
+  >
+    Payments
+  </button>
+
+  {isLandlord && (
+    <button
+      className={`tab-btn ${activeTab === "rent" ? "active" : ""}`}
+      onClick={() => setActiveTab("rent")}
+    >
+      Rent Update
+    </button>
+  )}
+
+  {extraTab === "cancel" && (
+    <button
+      className={`tab-btn ${activeTab === "cancel" ? "active" : ""}`}
+      onClick={() => setActiveTab("cancel")}
+    >
+      Cancel
+    </button>
+  )}
+
+  {extraTab === "terminate" && (
+    <button
+      className={`tab-btn ${activeTab === "terminate" ? "active" : ""}`}
+      onClick={() => setActiveTab("terminate")}
+    >
+      Terminate
+    </button>
+  )}
+</nav>
 
     <main className="main">
       {activeTab === "deploy" ? (
@@ -275,7 +339,24 @@ function App() {
       onChange={bumpRefresh}    
       refreshKey={refreshKey}
     />
-  ) : (
+  ) : activeTab === "cancel" ? (
+          <CancelContract
+            provider={provider}
+            signer={signer}
+            contractAddress={contractAddress}
+            onChanged={bumpRefresh}
+            refreshKey={refreshKey}
+          />
+        ) : activeTab === "terminate" ? (
+          <TerminatedContract
+            provider={provider}
+            signer={signer}
+            account={account}
+            contractAddress={contractAddress}
+            onChanged={bumpRefresh}
+            refreshKey={refreshKey}
+          />
+        ) : (
 
         <section className="info-lock-stack">
           
@@ -307,14 +388,6 @@ function App() {
             refreshKey={refreshKey}
           />
 
-          <CancelContract
-            provider={provider}
-            signer={signer}
-            contractAddress={contractAddress}
-            onChanged={bumpRefresh}
-            refreshKey={refreshKey}
-          />
-
           <PayRent
             provider={provider}
             signer={signer}
@@ -324,14 +397,6 @@ function App() {
             refreshKey={refreshKey}
           />
 
-          <TerminatedContract
-            provider={provider}
-            signer={signer}
-            account={account}
-            contractAddress={contractAddress}
-            onChanged={bumpRefresh}
-            refreshKey={refreshKey}
-          />
         </section>
       )}
 
