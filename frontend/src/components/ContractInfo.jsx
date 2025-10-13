@@ -1,12 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ethers } from "ethers";
 import artifact from "../abi/RentalContract.json";
 import "../styles/Components.css";
-import SignContract from "./SignContract";
 
-export default function ContractInfo({ provider, signer, account, contractAddress, setContractAddress }) {
+export default function ContractInfo({ provider, contractAddress, setContractAddress, onRoleDetected }) {
   const [contractData, setContractData] = useState(null);
-  const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [ethPrice, setEthPrice] = useState(null);
 
@@ -18,31 +16,29 @@ export default function ContractInfo({ provider, signer, account, contractAddres
       .catch((err) => console.error("Failed to fetch ETH price", err));
   }, []);
 
-  const loadContract = async () => {
+  const loadContract = useCallback(async () => {
     try {
       if (!provider) return alert("No provider found. Please connect MetaMask.");
 
       setLoading(true);
-
-      // Use provider (read-only)
       const contract = new ethers.Contract(contractAddress, artifact.abi, provider);
-
-      // Get contract info
       const data = await contract.getContractInfo();
       setContractData(data);
-
-      // Get payments
-      const p = await contract.getPayments();
-      setPayments(p);
+      onRoleDetected?.({ landlord: data[0], tenant: data[1] });
 
       setLoading(false);
     } catch (err) {
       console.error("Error loading contract:", err);
+      onRoleDetected?.({ landlord: null, tenant: null });
       setLoading(false);
     }
-  };
+  },[provider, contractAddress, onRoleDetected]);
 
-  // Convert wei → ETH → USD
+  useEffect(() => {
+    loadContract();
+  }, [loadContract]);
+
+  // Convert wei -> ETH -> USD
   const formatRent = (weiAmount) => {
     try {
       if (!weiAmount) return "0";
@@ -56,7 +52,6 @@ export default function ContractInfo({ provider, signer, account, contractAddres
     }
   };
 
-  // Map status number → text
   const getStatusLabel = (status) => {
     switch (Number(status)) {
       case 0: return "Created";
@@ -70,7 +65,9 @@ export default function ContractInfo({ provider, signer, account, contractAddres
 
   return (
     <div className="card">
-      <h2>Contract Info</h2>
+      <div className="card-toolbar" style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12}}>
+        <h2>Contract Info</h2>
+      </div>
 
       <label>Contract Address</label>
       <input
@@ -84,7 +81,6 @@ export default function ContractInfo({ provider, signer, account, contractAddres
         {loading ? "Loading..." : "Load Contract"}
       </button>
 
-      {/* Contract Info */}
       {contractData && (
         <>
           <div className="info">
@@ -101,25 +97,7 @@ export default function ContractInfo({ provider, signer, account, contractAddres
             <p><b>Status:</b> {getStatusLabel(contractData[9])}</p>
           </div>
 
-          {/* Actions Section */}
-          <div className="actions">
-            <h2>Actions</h2>
-            <SignContract contractAddress={contractAddress} signer={signer} account={account} />
-          </div>
         </>
-      )}
-
-      {/* Payments */}
-      {payments.length > 0 && (
-        <div className="info">
-          <h3>Payments</h3>
-          {payments.map((p, i) => (
-            <p key={i}>
-              Amount: {formatRent(p.amount)} | Time:{" "}
-              {new Date(p.timestamp * 1000).toLocaleString()}
-            </p>
-          ))}
-        </div>
       )}
     </div>
   );

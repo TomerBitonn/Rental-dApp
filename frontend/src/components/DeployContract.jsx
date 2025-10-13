@@ -37,28 +37,57 @@ export default function DeployContract({ signer, account, setContractAddress, co
         alert("Please connect MetaMask before deploying.");
         return;
       }
+
       if (!tenant || !usdRent || !duration) {
-        alert("Fill all fields");
+        alert("Please fill all fields before deploying.");
+        return;
+      }
+
+      if (!ethPrice) {
+        alert("ETH price not loaded yet, please wait a moment.");
         return;
       }
 
       setLoading(true);
 
+      const rentEth = usdRent / ethPrice;
+
+      if (rentEth <= 0) {
+        alert("Rent amount must be greater than 0.");
+        setLoading(false);
+        return;
+      }
+
+      const rentEthFixed = rentEth.toFixed(18);
+
+      const rentWei = ethers.utils.parseEther(rentEthFixed);
+
       const factory = new ethers.ContractFactory(artifact.abi, artifact.bytecode, signer);
 
-      // Convert USD → ETH → wei
-      const rentEth = usdRent / ethPrice;
       const contract = await factory.deploy(
         tenant,
-        ethers.utils.parseEther(rentEth.toString()),
+        rentWei,
         duration
       );
 
+      console.log("Contract deployment transaction:", contract.deployTransaction.hash);
+
       await contract.deployed();
+
+      console.log("Contract deployed at:", contract.address);
       setContractAddress(contract.address);
+
+      alert(`Contract successfully deployed at:\n${contract.address}`);
+
     } catch (err) {
-      console.error(err);
-      alert("Deployment failed, see console for details");
+      console.error("Contract deployment failed:", err);
+      if (err.code === "NUMERIC_FAULT") {
+        alert("Rent value too precise — try rounding or increasing the amount slightly.");
+      } else if (err.code === "INSUFFICIENT_FUNDS") {
+        alert("Not enough ETH in your wallet to deploy the contract.");
+      } else {
+        alert(`Deployment failed: ${err.message}`);
+      }
     } finally {
       setLoading(false);
     }
@@ -92,7 +121,7 @@ export default function DeployContract({ signer, account, setContractAddress, co
 
       {duration && <p>Duration: {duration} days</p>}
 
-      <label>Rent Amount (USD)</label>
+      <label>Monthly Rent Amount (USD)</label>
       <input
         type="number"
         placeholder="$ ≈ ETH"
@@ -107,7 +136,7 @@ export default function DeployContract({ signer, account, setContractAddress, co
       )}
 
       <button className="btn" onClick={deployContract} disabled={loading}>
-        {loading ? <span className="loader" /> : "Deploy Contract"}
+        {loading ? "Deploying..." : "Deploy Contract"}
       </button>
 
 
