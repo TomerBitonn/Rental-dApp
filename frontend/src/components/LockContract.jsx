@@ -41,6 +41,22 @@ export default function LockContract({ provider, signer, contractAddress, onChan
     try {
       if (!signer) throw new Error("No signer. Connect your wallet.");
       if (!isAddr(contractAddress)) throw new Error("Invalid contract address.");
+    try {
+        const ro = new ethers.Contract(contractAddress, artifact.abi, provider);
+        const info = await ro.getContractInfo(); // [0]=landlord, [1]=tenant, ...
+        const landlordAddr = String(info[0]).toLowerCase();
+        const me = (await signer.getAddress()).toLowerCase();
+        if (me !== landlordAddr) {
+          const short = (a) => `${a.slice(0, 6)}…${a.slice(-4)}`;
+          setNote({
+            type: "error",
+            text:
+              `Only the landlord can lock this contract. `
+          });
+          return;
+        }
+     } catch {}
+     
       if (!status.landlord || !status.tenant)
         throw new Error("Both parties must sign before locking.");
       if (status.locked) throw new Error("Contract is already locked.");
