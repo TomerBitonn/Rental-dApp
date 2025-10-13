@@ -1,0 +1,6 @@
+PORT=3001
+MONGODB_URI=mongodb+srv://tomerbiton324:Tomer1958!@cluster0.bwcsq6w.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+JWT_SECRET=g/sI77vgnfkJVHj3FIdasnA8wRrSnuoGfWlGGgWwg7iKAw+CJfmYWIkORy9wHOJM
+FRONTEND_ORIGIN=http://localhost:5173
+DOMAIN=localhost
+NODE_ENV=development

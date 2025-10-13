@@ -1,13 +1,15 @@
-
 import { useEffect, useState } from "react";
 import { ethers } from "ethers";
 import { getMe, logout } from "./api";
+import artifact from "./abi/RentalContract.json";
 
 import Login from "./components/Login";
 import DeployContract from "./components/DeployContract";
 import ContractInfo from "./components/ContractInfo";
 import LockContract from "./components/LockContract";
 import PayRent from "./components/PayRent";
+import RentUpdate from "./components/RentUpdate";
+import CancelContract from "./components/CancelContract";
 
 import "./styles/Components.css";
 import "./styles/App.css";
@@ -20,6 +22,7 @@ import Davidpic from "../assets/davidpic.png";
 import Inbarpic from "../assets/inbarpic.png";
 import SignContract from "./components/SignContract";
 import PaymentsHistory from "./components/PaymentsHistory";
+import TerminatedContract from "./components/TerminatedContract";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -32,6 +35,8 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
   const bumpRefresh = () => setRefreshKey(k => k + 1);
+  const [isLandlord, setIsLandlord] = useState(false);
+  const [isLocked, setIsLocked] = useState(false); 
 
   useEffect(() => {
     const checkSession = async () => {
@@ -44,6 +49,10 @@ function App() {
     };
     checkSession();
   }, []);
+
+  useEffect(() => {
+  if (activeTab === "rent" && !isLandlord) setActiveTab("info");
+  }, [activeTab, isLandlord]);
 
   // MetaMask
   useEffect(() => {
@@ -75,6 +84,25 @@ function App() {
     return () => window.ethereum.removeListener("accountsChanged", onChange);
   }, []);
 
+  // readIsLocked – asks the contract if it's locked (true/false)
+  // we call this whenever address/provider/refreshKey changes
+  useEffect(() => {
+    const readIsLocked = async () => {
+      try {
+        if (!provider || !contractAddress) {
+          setIsLocked(false);
+          return;
+        }
+        const c = new ethers.Contract(contractAddress, artifact.abi, provider);
+        const v = await c.isLocked();
+        setIsLocked(Boolean(v));
+      } catch {
+        setIsLocked(false);
+      }
+    };
+    readIsLocked();
+  }, [provider, contractAddress, refreshKey]);
+
   const handleLogout = async () => {
     await logout();
     setUser(null);
@@ -82,7 +110,22 @@ function App() {
     setProvider(null);
     setAccount(null);
     setAccountRaw(null);
+    setIsLandlord(false);    
   };
+
+    // decide if we have an extra tab:
+    // when we have a contract address, show "cancel" if unlocked, "terminate" if locked
+    const extraTab = contractAddress ? (isLocked ? "terminate" : "cancel") : null;
+
+     // keep activeTab valid when extra tab appears/disappears or flips
+    useEffect(() => {
+      setActiveTab((prev) => {
+        if (!extraTab && (prev === "cancel" || prev === "terminate")) return "info";
+        if (extraTab === "cancel" && prev === "terminate") return "cancel";
+        if (extraTab === "terminate" && prev === "cancel") return "terminate";
+        return prev;
+      });
+    }, [extraTab]);
 
   if (loading) {
     return (
@@ -185,7 +228,7 @@ function App() {
       </div>
 
     
-    <nav className="tab-nav tabs--compact" data-active={activeTab}>
+    <nav className="tab-nav tabs--compact" data-active={activeTab} >
       <button className={`tab-btn ${activeTab === "deploy" ? "active" : ""}`} onClick={() => setActiveTab("deploy")}>
         Deploy Contract
       </button>
@@ -195,6 +238,12 @@ function App() {
       <button className={`tab-btn ${activeTab === "payments" ? "active" : ""}`} onClick={() => setActiveTab("payments")}>
         Payments
       </button>
+
+      {isLandlord && (
+        <button className={`tab-btn ${activeTab === "rent" ? "active" : ""}`} onClick={() => setActiveTab("rent")}>
+          Rent Update
+        </button>
+      )}
     </nav>
 
     <main className="main">
@@ -217,6 +266,15 @@ function App() {
         appName="Rental Smart Contracts DApp"
         logoUrl={logoUrl}
       />
+  ) : activeTab === "rent" ? (
+    <RentUpdate
+      provider={provider}
+      signer={signer}
+      account={account}
+      contractAddress={contractAddress}
+      onChange={bumpRefresh}    
+      refreshKey={refreshKey}
+    />
   ) : (
 
         <section className="info-lock-stack">
@@ -227,7 +285,11 @@ function App() {
             account={account}
             contractAddress={contractAddress}
             setContractAddress={setContractAddress}
-          />
+            onRoleDetected={({ landlord, tenant }) => {
+          if (!landlord || !account) return setIsLandlord(false);
+          setIsLandlord(String(landlord).toLowerCase() === String(account).toLowerCase());
+        }}
+      />
 
           <SignContract
             provider={provider}
@@ -235,6 +297,7 @@ function App() {
             signer={signer}
             account={account}
           />
+          
 
           <LockContract
             provider={provider}
@@ -244,12 +307,29 @@ function App() {
             refreshKey={refreshKey}
           />
 
+          <CancelContract
+            provider={provider}
+            signer={signer}
+            contractAddress={contractAddress}
+            onChanged={bumpRefresh}
+            refreshKey={refreshKey}
+          />
+
           <PayRent
             provider={provider}
             signer={signer}
             account={account}
             contractAddress={contractAddress}
             onChange={bumpRefresh}   
+            refreshKey={refreshKey}
+          />
+
+          <TerminatedContract
+            provider={provider}
+            signer={signer}
+            account={account}
+            contractAddress={contractAddress}
+            onChanged={bumpRefresh}
             refreshKey={refreshKey}
           />
         </section>

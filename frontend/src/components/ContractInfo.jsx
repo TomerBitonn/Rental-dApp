@@ -3,7 +3,7 @@ import { ethers } from "ethers";
 import artifact from "../abi/RentalContract.json";
 import "../styles/Components.css";
 
-export default function ContractInfo({ provider, contractAddress, setContractAddress }) {
+export default function ContractInfo({ provider, contractAddress, setContractAddress, onRoleDetected }) {
   const [contractData, setContractData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [ethPrice, setEthPrice] = useState(null);
@@ -21,26 +21,24 @@ export default function ContractInfo({ provider, contractAddress, setContractAdd
       if (!provider) return alert("No provider found. Please connect MetaMask.");
 
       setLoading(true);
-
-      // Use provider (read-only)
       const contract = new ethers.Contract(contractAddress, artifact.abi, provider);
-
-      // Get contract info
       const data = await contract.getContractInfo();
       setContractData(data);
+      onRoleDetected?.({ landlord: data[0], tenant: data[1] });
 
       setLoading(false);
     } catch (err) {
       console.error("Error loading contract:", err);
+      onRoleDetected?.({ landlord: null, tenant: null });
       setLoading(false);
     }
-  },[provider, contractAddress]);
+  },[provider, contractAddress, onRoleDetected]);
 
   useEffect(() => {
     loadContract();
   }, [loadContract]);
 
-  // Convert wei → ETH → USD
+  // Convert wei -> ETH -> USD
   const formatRent = (weiAmount) => {
     try {
       if (!weiAmount) return "0";
@@ -54,7 +52,6 @@ export default function ContractInfo({ provider, contractAddress, setContractAdd
     }
   };
 
-  // Map status number → text
   const getStatusLabel = (status) => {
     switch (Number(status)) {
       case 0: return "Created";
@@ -84,7 +81,6 @@ export default function ContractInfo({ provider, contractAddress, setContractAdd
         {loading ? "Loading..." : "Load Contract"}
       </button>
 
-      {/* Contract Info */}
       {contractData && (
         <>
           <div className="info">
