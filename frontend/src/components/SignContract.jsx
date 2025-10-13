@@ -18,6 +18,7 @@ export default function SignContract({ provider, signer, contractAddress }) {
 
   const read = useCallback(async () => {
     console.log(provider, contractAddress);
+    
     if (!provider || !isAddr(contractAddress)) return;
     try {
       setBusy(true);
