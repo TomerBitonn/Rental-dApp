@@ -1,6 +1,7 @@
-# Rental Smart Contracts DApp 
+# Rental dApp - Full-Stack Decentralized Rental Management
 
-Full-stack decentralized application (dApp) for **deploying and managing on-chain rental agreements**.  
+A complete Web3 DApp for deploying and managing Ethereum-based rental contracts -
+including authentication, payments, and lifecycle management (sign, lock, pay, terminate). 
 
 **Important:**  
 This repository contains **only the dApp layer** - the **React frontend** and **Node.js backend** that interact with the blockchain.  
@@ -19,42 +20,73 @@ It integrates with the [Rental-Smart-Contracts](https://github.com/TomerBitonn/R
 
 ## ⚙️ Key Features
 
-### 🧩 Authentication (Backend + Frontend)
-✅ **Sign-In With Ethereum (SIWE)**  
-- Login with MetaMask by signing a message.  
-- Secure authentication using EIP-4361 standard.  
-- Session stored via **JWT (cookie)** on the backend.  
-- MongoDB stores each user’s wallet address and nonce.  
-- Automatic nonce rotation after successful login.  
+### 🧩 Authentication (SIWE + JWT)
 
-✅ **Logout & Session Management**  
-- JWT cleared from browser cookies.  
-- `/me` endpoint verifies existing sessions automatically.  
+Login with MetaMask using Sign-In With Ethereum (EIP-4361)
+
+Backend verifies wallet signature, issues JWT cookie session
+
+MongoDB stores wallet addresses and rotating nonces
+
+Automatic session validation (/me endpoint)
 
 ---
 
-### 💡 Smart Contract Interaction (Frontend)
+### 💡 Smart Contract Management (Frontend)
 
-✅ **Deploy Contract**  
-- Connect MetaMask wallet.  
-- Enter tenant address, rent amount (USD), and rental period.  
-- USD automatically converted to ETH.  
-- Deploys contract to **Sepolia Testnet**.
+**✅ Deploy Contract**
+Deploy new rental contracts directly from the dApp - specify:
 
-✅ **Contract Info**  
-- View existing rental contract by address.  
-- Displays:
-  - Landlord & tenant addresses.  
-  - Rent amount (ETH/USD).  
-  - Start & end dates.  
-  - Contract status (Created / Signed / Locked / Cancelled / Terminated).  
-- Tracks payments & on-chain events.  
+Tenant address
 
-✅ **Sign Contract**  
-- Users can now **sign the rental contract directly from the dApp**.  
-- Detects if the connected wallet is the **landlord or tenant**.  
-- Automatically calls the correct smart contract function.  
-- Updates the contract status live after signature confirmation.
+Rent amount (USD → ETH auto conversion via CoinGecko API)
+
+Start/end dates
+
+**✅ View Contract Info**
+Display contract metadata:
+
+Landlord & tenant
+
+Rent amount (ETH/USD)
+
+Start & end date
+
+Status (Created / Signed / Locked / Cancelled / Terminated)
+
+**✅ Sign Contract**
+
+Detects connected wallet role (landlord/tenant)
+
+Calls the correct signing function automatically
+
+**✅ Lock Contract**
+
+Available only to landlord
+
+Locks contract after both parties have signed
+
+**✅ Pay Rent**
+
+Tenant can pay monthly rent in ETH
+
+Tracks payment status on-chain
+
+**✅ Payment History**
+
+Shows all past transactions & rent payments from events
+
+**✅ Update Rent**
+
+Landlord can modify monthly rent amount in USD (auto converts to ETH)
+
+**✅ Terminate Contract**
+
+Tenant can terminate early (with a 2× rent fee)
+
+Landlord can cancel the agreement
+
+Shows dynamic termination fee
 
 ---
 
@@ -118,39 +150,54 @@ flowchart LR
 ## 📂 Project Structure
 
 ```
-Rental-dApp/
+RENTAL-DAPP-DEV/
 │
-├── frontend/                      # React-based dApp UI
+├── frontend/
+│   ├── assets/                        
+│   ├── node_modules/
 │   ├── src/
-│   │   ├── api.js                 # REST API calls to backend
-│   │   ├── App.jsx                # Main app: manages login + tabs
-│   │   ├── main.jsx               # Entry point (renders App)
-│   │
+│   │   ├── abi/
+│   │   │   └── RentalContract.json     
+│   │   │
 │   │   ├── components/
-│   │   │   ├── Login.jsx          # SIWE login with MetaMask
-│   │   │   ├── DeployContract.jsx # Deploy new rental contracts
-│   │   │   ├── ContractInfo.jsx   # View contract details
-│   │   │   └── SignContract.jsx   # Sign contract on-chain
-│   │
+│   │   │   ├── CancelContract.jsx      
+│   │   │   ├── ContractInfo.jsx        
+│   │   │   ├── DeployContract.jsx      
+│   │   │   ├── LockContract.jsx        
+│   │   │   ├── Login.jsx               
+│   │   │   ├── PaymentsHistory.jsx     
+│   │   │   ├── PayRent.jsx             
+│   │   │   ├── RentUpdate.jsx         
+│   │   │   ├── SignContract.jsx        
+│   │   │   └── TerminatedContract.jsx  
+│   │   │
 │   │   ├── styles/
 │   │   │   ├── App.css
 │   │   │   ├── Components.css
 │   │   │   └── index.css
+│   │   │
+│   │   ├── api.js                      
+│   │   ├── App.jsx                    
+│   │   └── main.jsx                    
 │   │
-│   │   └── abi/
-│   │       └── RentalContract.json # ABI of the rental contract
-│   │
-│   ├── vite.config.js
+│   ├── .gitignore
+│   ├── eslint.config.js
 │   ├── index.html
 │   ├── package.json
-│   └── README.md
+│   ├── package-lock.json
+│   └── vite.config.js                  
 │
-└── server/                        # Node.js backend
-    ├── server.js                  # Express server (SIWE, JWT, routes)
-    ├── db.js                      # MongoDB connection (singleton)
-    ├── auth.js                    # Nonce, JWT, SIWE logic
-    ├── package.json
-    └── .env    
+├── server/
+│   ├── node_modules/
+│   ├── .env                            
+│   ├── .gitignore
+│   ├── auth.js                        
+│   ├── db.js                          
+│   ├── package.json
+│   ├── package-lock.json
+│   └── server.js                      
+│
+└── README.md
 ```
 
 ---
@@ -232,13 +279,3 @@ NODE_ENV=development
 
 - **Metamask not detected**  
   → Make sure the extension is installed and you’re connected to Sepolia.
-
----
-
-## 📌 TODO / Next Steps
-
-- ✅ Add Sign Contract functionality (done)
-- 🔄 Add Lock / Cancel / Terminate contract actions
-- 💸 Add Pay Rent flow from the UI
-- 🧾 Improve payment history and event tracking
-- 🧪 Add unit tests for backend endpoints
