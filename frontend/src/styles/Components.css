@@ -157,18 +157,53 @@
 .tab-nav[data-active="deploy"]{ --slider-left: 6px; }
 
 .tab-nav[data-active="info"]  { --slider-left: calc(50% + 2px); }
-
-.tab-nav.tabs--compact{
+.tab-nav.tabs--compact {
+  --btn-w: 180px;      /* רוחב כפתור (שניי למה שמתאים לך) */
+  --gap: 6px;          /* הרווח בין כפתורים */
+  position: relative;
+  display: flex;
+  gap: var(--gap);
+  padding: 0 var(--gap);
+  border-bottom: 1px solid rgba(255,255,255,0.12);
   margin:0;
   gap:6px; padding:6px;
   --btn-w: 180px;
   --slider-width: var(--btn-w);
 }
+
+.tab-nav.tabs--compact .tab-btn {
+  width: var(--btn-w);
+  padding: 10px 8px;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  opacity: .85;
+  transition: opacity .2s ease;
+}
+
+.tab-nav.tabs--compact .tab-btn.active { opacity: 1; }
+
+.tab-nav.tabs--compact .tab-slider {
+  position: absolute;
+  bottom: 0;
+  left: var(--slider-left, var(--gap));
+  width: var(--btn-w);
+  height: 2px;
+  background: currentColor;
+  opacity: .7;
+  transition: left .25s ease, width .25s ease;
+}
+
 .tab-nav.tabs--compact .tab-btn{ width: var(--btn-w); }
 
 .tab-nav.tabs--compact[data-active="deploy"]   { --slider-left: 6px; }
 .tab-nav.tabs--compact[data-active="info"]     { --slider-left: calc(6px + (var(--btn-w) + 6px) * 1); }
 .tab-nav.tabs--compact[data-active="payments"] { --slider-left: calc(6px + (var(--btn-w) + 6px) * 2); }
+.tab-nav.tabs--compact[data-active="rent"]     { --slider-left: calc(var(--gap) + (var(--btn-w) + var(--gap)) * 3); }
+.tab-nav.tabs--compact[data-tabs="5"][data-active="cancel"],
+.tab-nav.tabs--compact[data-tabs="5"][data-active="terminate"] {
+  --slider-left: calc(6px + (var(--btn-w) + var(--gap)) * 4);
+}
 
 @media (max-width: 480px){
   .tab-nav.tabs--compact{ --btn-w: 140px; } /* או 120px אם צפוף */
