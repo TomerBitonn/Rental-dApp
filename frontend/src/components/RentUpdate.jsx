@@ -22,11 +22,12 @@ export default function RentUpdate({
   const isAddr = !!contractAddress && /^0x[a-fA-F0-9]{40}$/.test(contractAddress);
   const isLandlord = landlord && account && lower(landlord) === lower(account);
 
+  // Fetch ETH price (USD)
   useEffect(() => {
     fetch("https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd")
-      .then(r => r.json())
-      .then(d => setEthPrice(d?.ethereum?.usd ?? null))
-      .catch(() => {});
+      .then((res) => res.json())
+      .then((data) => setEthPrice(data.ethereum.usd))
+      .catch((err) => console.error("Failed to fetch ETH price", err));
   }, []);
 
   const load = async () => {

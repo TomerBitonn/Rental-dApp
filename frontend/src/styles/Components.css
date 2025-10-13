@@ -158,8 +158,8 @@
 
 .tab-nav[data-active="info"]  { --slider-left: calc(50% + 2px); }
 .tab-nav.tabs--compact {
-  --btn-w: 180px;      /* רוחב כפתור (שניי למה שמתאים לך) */
-  --gap: 6px;          /* הרווח בין כפתורים */
+  --btn-w: 180px;      
+  --gap: 6px;        
   position: relative;
   display: flex;
   gap: var(--gap);
@@ -200,13 +200,17 @@
 .tab-nav.tabs--compact[data-active="info"]     { --slider-left: calc(6px + (var(--btn-w) + 6px) * 1); }
 .tab-nav.tabs--compact[data-active="payments"] { --slider-left: calc(6px + (var(--btn-w) + 6px) * 2); }
 .tab-nav.tabs--compact[data-active="rent"]     { --slider-left: calc(var(--gap) + (var(--btn-w) + var(--gap)) * 3); }
-.tab-nav.tabs--compact[data-tabs="5"][data-active="cancel"],
+
+.tab-nav.tabs--compact[data-tabs="4"][data-active="terminate"] {
+  --slider-left: calc(6px + (var(--btn-w) + var(--gap)) * 3);
+}
+
 .tab-nav.tabs--compact[data-tabs="5"][data-active="terminate"] {
   --slider-left: calc(6px + (var(--btn-w) + var(--gap)) * 4);
 }
 
 @media (max-width: 480px){
-  .tab-nav.tabs--compact{ --btn-w: 140px; } /* או 120px אם צפוף */
+  .tab-nav.tabs--compact{ --btn-w: 140px; } 
 }
 
 .card, .action-card{

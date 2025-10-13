@@ -4,13 +4,7 @@ import { jsPDF } from "jspdf";
 import artifact from "../abi/RentalContract.json";
 import "../styles/Components.css";
 
-export default function PaymentsHistory({
-  provider,
-  contractAddress,
-  refreshKey = 0,
-  appName = "Rental Smart Contracts DApp",
-  logoUrl,
-}) {
+export default function PaymentsHistory({ provider, contractAddress, refreshKey = 0, appName = "Rental Smart Contracts DApp", logoUrl }) {
   const [ethPrice, setEthPrice] = useState(null);
   const [rows, setRows] = useState([]);
   const [busy, setBusy] = useState(false);
@@ -21,12 +15,12 @@ export default function PaymentsHistory({
     [contractAddress]
   );
 
-  // Fetch ETH/USD price from CoinGecko
+  // Fetch ETH price (USD)
   useEffect(() => {
     fetch("https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd")
-      .then((r) => r.json())
-      .then((d) => setEthPrice(d?.ethereum?.usd ?? null))
-      .catch(() => {});
+      .then((res) => res.json())
+      .then((data) => setEthPrice(data.ethereum.usd))
+      .catch((err) => console.error("Failed to fetch ETH price", err));
   }, []);
 
   // Format value from wei to ETH + USD
@@ -42,9 +36,8 @@ export default function PaymentsHistory({
     }
   };
 
-  /**
-   * Load payments list from the smart contract
-   */
+  
+  // Load payments list from the smart contract
   const load = useCallback(async () => {
     if (!provider || !isAddr) return;
     setBusy(true);
@@ -74,9 +67,8 @@ export default function PaymentsHistory({
     load();
   }, [load, refreshKey]);
 
-  /**
-   * Export payments history to PDF
-   */
+  
+  // Export payments history to PDF
   const exportPDF = async () => {
     // Convert logo URL to base64 if provided
     const logoDataUrl = await (async () => {

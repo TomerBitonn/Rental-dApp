@@ -18,11 +18,12 @@ export default function PayRent({ provider, signer, account, contractAddress, re
     }
   };
 
+  // Fetch ETH price (USD)
   useEffect(() => {
     fetch("https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd")
-      .then((r) => r.json())
-      .then((d) => setEthPrice(d?.ethereum?.usd ?? null))
-      .catch(() => {});
+      .then((res) => res.json())
+      .then((data) => setEthPrice(data.ethereum.usd))
+      .catch((err) => console.error("Failed to fetch ETH price", err));
   }, []);
 
   const read = useCallback(async () => {

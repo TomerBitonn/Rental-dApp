@@ -125,7 +125,7 @@ function App() {
     mounted = false;
     try {
       if (c?.removeAllListeners) c.removeAllListeners("Locked");
-    } catch {}
+    } catch(e) {console.log(`Error: ${e}`);}
   };
 }, [provider, contractAddress, refreshKey]);
 
@@ -366,7 +366,7 @@ function App() {
             account={account}
             contractAddress={contractAddress}
             setContractAddress={setContractAddress}
-            onRoleDetected={({ landlord, tenant }) => {
+            onRoleDetected={({ landlord }) => {
           if (!landlord || !account) return setIsLandlord(false);
           setIsLandlord(String(landlord).toLowerCase() === String(account).toLowerCase());
         }}

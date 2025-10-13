@@ -1,9 +1,3 @@
-// components/TerminatedContract.jsx
-// UI for early termination according to *your* ABI:
-// - Tenant can call terminateByTenant() and pay 2× rent (payable).
-// - Landlord can call cancelContract() (no payment).
-// There is no request/approve flow in the ABI, so this component reflects that.
-
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { ethers } from "ethers";
 import artifact from "../abi/RentalContract.json";
@@ -14,8 +8,8 @@ export default function TerminatedContract({
   signer,
   account,
   contractAddress,
-  onChanged,      // optional refresh callback
-  refreshKey = 0, // parent bump -> reload
+  onChanged,      
+  refreshKey = 0, 
 }) {
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState(null);
@@ -40,7 +34,7 @@ export default function TerminatedContract({
   const iAmLandlord = useMemo(() => lower(account) === lower(snap.landlord), [account, snap.landlord]);
   const iAmTenant   = useMemo(() => lower(account) === lower(snap.tenant),   [account, snap.tenant]);
 
-  // -------- helpers --------
+  // helpers
 
   // small helper: pretty error to string
   const pretty = (e) =>
@@ -69,9 +63,7 @@ export default function TerminatedContract({
 
   const doubleEth = useMemo(() => weiToEth(doubleWei), [doubleWei]);
 
-  // -------- chain I/O --------
-
-  // read() – pulls a fresh snapshot from the contract
+  // read() - pulls a fresh snapshot from the contract
   // we keep it tiny: addresses, rent, signatures, locked/active, status
   const read = useCallback(async () => {
     setNote(null);
@@ -101,34 +93,34 @@ export default function TerminatedContract({
   // we guard with simple checks so the user gets clear reasons when disabled
   const terminateByTenant = async () => {
     try {
-      if (!signer) { setNote({ type: "error", text: "Please connect your wallet first." }); return; }
-      if (!isAddr)  { setNote({ type: "error", text: "Invalid contract address." }); return; }
+      if (!signer) { setNote({ type: "error", text: "Please connect your wallet first" }); return; }
+      if (!isAddr)  { setNote({ type: "error", text: "Invalid contract address" }); return; }
 
       await read(); // make sure we operate on fresh state
 
       if (!iAmTenant) {
-        setNote({ type: "error", text: "Only the tenant can terminate early with a fee." });
+        setNote({ type: "error", text: "Only the tenant can terminate early with a fee" });
         return;
       }
       if (!snap.active) {
-        setNote({ type: "info", text: "Contract is already inactive." });
+        setNote({ type: "info", text: "Contract is already inactive" });
         return;
       }
       if (!snap.locked) {
-        setNote({ type: "error", text: "Contract must be locked before termination." });
+        setNote({ type: "error", text: "Contract must be locked before termination" });
         return;
       }
       if (!snap.signedL || !snap.signedT) {
-        setNote({ type: "error", text: "Both parties must sign before termination." });
+        setNote({ type: "error", text: "Both parties must sign before termination" });
         return;
       }
       if (doubleWei === 0n) {
-        setNote({ type: "error", text: "Invalid rent amount (cannot compute 2× fee)." });
+        setNote({ type: "error", text: "Invalid rent amount (cannot compute X 2 fee)" });
         return;
       }
 
       setBusy(true);
-      setNote({ type: "info", text: `Submitting payment of ${doubleEth.toFixed(6)} ETH… Confirm in wallet.` });
+      setNote({ type: "info", text: `Submitting payment of ${doubleEth.toFixed(6)} ETH… Confirm in wallet` });
 
       const c = new ethers.Contract(contractAddress, artifact.abi, signer);
       const tx = await c.terminateByTenant({ value: doubleWei });
@@ -136,7 +128,7 @@ export default function TerminatedContract({
       setNote({ type: "info", text: "Waiting for on-chain confirmation…" });
       await tx.wait(1);
 
-      setNote({ type: "success", text: "✅ Termination executed. Contract is now inactive." });
+      setNote({ type: "success", text: "Termination executed. Contract is now inactive" });
       await read();
       onChanged?.();
     } catch (e) {
@@ -150,22 +142,22 @@ export default function TerminatedContract({
   // we still do some friendly checks and messages
   const cancelByLandlord = async () => {
     try {
-      if (!signer) { setNote({ type: "error", text: "Please connect your wallet first." }); return; }
-      if (!isAddr)  { setNote({ type: "error", text: "Invalid contract address." }); return; }
+      if (!signer) { setNote({ type: "error", text: "Please connect your wallet first" }); return; }
+      if (!isAddr)  { setNote({ type: "error", text: "Invalid contract address" }); return; }
 
       await read();
 
       if (!iAmLandlord) {
-        setNote({ type: "error", text: "Only the landlord can cancel the contract." });
+        setNote({ type: "error", text: "Only the landlord can cancel the contract" });
         return;
       }
       if (!snap.active) {
-        setNote({ type: "info", text: "Contract is already inactive." });
+        setNote({ type: "info", text: "Contract is already inactive" });
         return;
       }
 
       setBusy(true);
-      setNote({ type: "info", text: "Submitting cancel… Please confirm in your wallet." });
+      setNote({ type: "info", text: "Submitting cancel… Please confirm in your wallet" });
 
       const c = new ethers.Contract(contractAddress, artifact.abi, signer);
       const tx = await c.cancelContract();
@@ -173,7 +165,7 @@ export default function TerminatedContract({
       setNote({ type: "info", text: "Waiting for on-chain confirmation…" });
       await tx.wait(1);
 
-      setNote({ type: "success", text: "✅ Contract cancelled by landlord." });
+      setNote({ type: "success", text: "Contract cancelled by landlord" });
       await read();
       onChanged?.();
     } catch (e) {
@@ -183,7 +175,7 @@ export default function TerminatedContract({
     }
   };
 
-  // -------- UI --------
+  // UI 
 
   return (
     <div className="card">
@@ -194,9 +186,9 @@ export default function TerminatedContract({
       <div className="info">
         <p>
           <b>Active:</b> {snap.active ? "Yes" : "No"} | <b>Locked:</b> {snap.locked ? "Yes" : "No"} |{" "}
-          <b>Signed Lanlord / Tenant:</b> {snap.signedL ? "Yes" : "No"} / {snap.signedT ? "Yes" : "No"}
+          <b>Signed by Lanlord:</b> {snap.signedL ? "Yes" : "No"} | <b>Signed by Tenant:</b> {snap.signedT ? "Yes" : "No"}
         </p>
-        <p><b>Termination fee (Tenant):</b> {doubleEth.toFixed(6)} ETH (2× monthly rent)</p>
+        <p><b>Termination fee (Tenant):</b> {doubleEth.toFixed(6)} ETH (Monthly Rent Amount <b>X</b> 2)</p>
       </div>
 
       {note && <Notice type={note.type}>{note.text}</Notice>}
@@ -207,9 +199,9 @@ export default function TerminatedContract({
           className="btn"
           onClick={terminateByTenant}
           disabled={busy || !isAddr}
-          title="Tenant pays 2× rent to terminate early"
+          title="Tenant pays X 2 rent to terminate early"
         >
-          {busy ? "Processing…" : `Terminate Early (Pay 2×)`}
+          {busy ? "Processing…" : `Terminate Early (Rent Amount X 2)`}
         </button>
 
         {/* Landlord button */}
