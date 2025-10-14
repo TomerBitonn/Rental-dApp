@@ -58,10 +58,8 @@ function Login({ onLoginSuccess }) {
   };
 
   return (
-    <div className="card">
-      <h2>Sign In with Ethereum</h2>
-      <p>Authenticate with your wallet to access the DApp</p>
-      <button className="btn" onClick={handleLogin} disabled={loading}>
+    <div className="login-card">
+      <button className="btn-login" onClick={handleLogin} disabled={loading}>
         {loading ? "Processing..." : "Login with MetaMask"}
       </button>
       <p>{status}</p>
