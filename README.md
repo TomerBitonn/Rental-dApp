@@ -20,73 +20,68 @@ It integrates with the [Rental-Smart-Contracts](https://github.com/TomerBitonn/R
 
 ## ⚙️ Key Features
 
-### 🧩 Authentication (SIWE + JWT)
+### Home Page
+![Login](frontend/assets/Login.png)
 
-Login with MetaMask using Sign-In With Ethereum (EIP-4361)
+### Login with MetaMask
+- Login with MetaMask using Sign-In With Ethereum (EIP-4361)
+- Backend verifies wallet signature, issues JWT cookie session
+- MongoDB stores wallet addresses and rotating nonces
+- Automatic session validation (/me endpoint)
+![Login](frontend/assets/LoginMM.png)
 
-Backend verifies wallet signature, issues JWT cookie session
-
-MongoDB stores wallet addresses and rotating nonces
-
-Automatic session validation (/me endpoint)
-
----
-
-### 💡 Smart Contract Management (Frontend)
-
-**✅ Deploy Contract**
+### Deploy Contract
 Deploy new rental contracts directly from the dApp - specify:
+- Tenant address
+- Rent amount (USD → ETH auto conversion via CoinGecko API)
+- Start/end dates
+![Deploy](frontend/assets/DeployContractMM.png)
 
-Tenant address
-
-Rent amount (USD → ETH auto conversion via CoinGecko API)
-
-Start/end dates
-
-**✅ View Contract Info**
+### Contract Info
 Display contract metadata:
+- Landlord & tenant
+- Rent amount (ETH/USD)
+- Start & end date
+- Status (Created / Signed / Locked / Cancelled / Terminated)
+![Contract Info](frontend/assets/ContractInfo.png)
 
-Landlord & tenant
+### Sign Contract
+- Detects connected wallet role (landlord/tenant)
+- Calls the correct signing function automatically
+![Sign Contract](frontend/assets/SignContractMM.png)
 
-Rent amount (ETH/USD)
+### Lock Contract - Landlord Only
+- Available only to landlord
+- Locks contract after both parties have signed
+![Lock Contract](frontend/assets/LockContractMM.png)
 
-Start & end date
+### Pay Rent - Tenant Only
+- Tenant can pay monthly rent in ETH
+- Tracks payment status on-chain
+![Pay Rent](frontend/assets/PayRentMM.png)
 
-Status (Created / Signed / Locked / Cancelled / Terminated)
+### Payments History
+- Shows all past transactions & rent payments from events
+- Export to PDF
+![Payments History](frontend/assets/PaymentsHistory.png)
+![Payments History](frontend/assets/PaymentsHistoryPDF.png)
 
-**✅ Sign Contract**
+### Update Rent - Landlord Only
+- Landlord can modify monthly rent amount in USD (auto converts to ETH), before the contract is locked
+![Update Rent](frontend/assets/UpdateRent.png)
 
-Detects connected wallet role (landlord/tenant)
+### Cancel Contract - Before Lock
+- The landlord and the tenant can cancel the contract before locking it
+![Cancel Contract](frontend/assets/Cancel2.png)
 
-Calls the correct signing function automatically
+### Terminate Contract - After Lock, Tenant Only
+- Tenant can terminate early (with a 2× rent fee)
+- Shows dynamic termination fee
+![Terminate Contract](frontend/assets/TerminateContract.png)
+![Terminate Contract](frontend/assets/ContractInfoTerminated.png)
 
-**✅ Lock Contract**
-
-Available only to landlord
-
-Locks contract after both parties have signed
-
-**✅ Pay Rent**
-
-Tenant can pay monthly rent in ETH
-
-Tracks payment status on-chain
-
-**✅ Payment History**
-
-Shows all past transactions & rent payments from events
-
-**✅ Update Rent**
-
-Landlord can modify monthly rent amount in USD (auto converts to ETH)
-
-**✅ Terminate Contract**
-
-Tenant can terminate early (with a 2× rent fee)
-
-Landlord can cancel the agreement
-
-Shows dynamic termination fee
+### Transactions on Etherscan
+![Transactions Etherscan](frontend/assets/EtherscanTransactions.png)
 
 ---
 
@@ -253,16 +248,6 @@ NODE_ENV=development
    ```bash
    http://localhost:5173
    ```
-
----
-
-## 🖼️ Screenshots (More to come..)
-
-### Deploy form
-![Deploy form](frontend/assets/Deploy_Rental_Contract.png)
-
-### Contract Info page
-![Contract Info page](frontend/assets/Contract_Info.png)
 
 ---
 
