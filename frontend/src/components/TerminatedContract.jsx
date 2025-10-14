@@ -31,7 +31,6 @@ export default function TerminatedContract({
     [contractAddress]
   );
   const lower = (s) => (s ? String(s).toLowerCase() : s);
-  const iAmLandlord = useMemo(() => lower(account) === lower(snap.landlord), [account, snap.landlord]);
   const iAmTenant   = useMemo(() => lower(account) === lower(snap.tenant),   [account, snap.tenant]);
 
   // helpers
@@ -147,10 +146,6 @@ export default function TerminatedContract({
 
       await read();
 
-      if (!iAmLandlord) {
-        setNote({ type: "error", text: "Only the landlord can cancel the contract" });
-        return;
-      }
       if (!snap.active) {
         setNote({ type: "info", text: "Contract is already inactive" });
         return;
@@ -211,7 +206,7 @@ export default function TerminatedContract({
           disabled={busy || !isAddr}
           title="Landlord cancels without payment"
         >
-          {busy ? "Processing…" : "Cancel Contract (Landlord)"}
+          {busy ? "Processing…" : "Cancel Contract"}
         </button>
       </div>
     </div>

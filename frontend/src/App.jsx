@@ -14,9 +14,9 @@ import CancelContract from "./components/CancelContract";
 import "./styles/Components.css";
 import "./styles/App.css";
 
-import logoUrl from "../assets/logo3.png";
+import logoUrl from "../assets/logo.png";
 import Yahelpic from "../assets/Yahelpic.png";
-import Tomerpic from "../assets/Tomerpic2.png";
+import Tomerpic from "../assets/Tomerpic.png";
 import Lizapic from "../assets/lizapic.png";
 import Davidpic from "../assets/davidpic.png";
 import Inbarpic from "../assets/inbarpic.png";
